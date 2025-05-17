@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_const_constructors_in_immutables
+
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'home_page.dart';
@@ -16,7 +18,9 @@ class _SplashScreenState extends State<SplashScreen> {
     super.initState();
     Timer(const Duration(seconds: 2), () {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => HomePage(toggleTheme: widget.toggleTheme,)),
+        MaterialPageRoute(
+          builder: (_) => HomePage(toggleTheme: widget.toggleTheme),
+        ),
       );
     });
   }
@@ -28,9 +32,15 @@ class _SplashScreenState extends State<SplashScreen> {
       body: Center(
         child: Text(
           'چت‌بات من',
-          style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
     );
   }
 }
+
+//

@@ -1,8 +1,11 @@
+// ignore_for_file: avoid_print, prefer_const_constructors_in_immutables
+
 import 'package:flutter/material.dart';
 import 'main.dart';
+
 class HomePage extends StatefulWidget {
   final VoidCallback toggleTheme;
-  HomePage({super.key, required this.toggleTheme,});
+  HomePage({super.key, required this.toggleTheme});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -21,23 +24,24 @@ class _HomePageState extends State<HomePage> {
         child: SafeArea(
           child: Column(
             children: const [
-              ListTile(
-                title: Text('چت‌ها'),
-              ),
+              ListTile(title: Text('چت‌ها')), Spacer(),
               // Empty for now
             ],
           ),
         ),
       ),
-      appBar: AppBar(title: Text('چت بات من'),centerTitle: true, actions: [
+      appBar: AppBar(
+        title: Text('چت بات من'),
+        centerTitle: true,
+        actions: [
           IconButton(
             icon: Icon(
-               isDarkNotifier.value ? Icons.wb_sunny : Icons.brightness_2,
-              
+              isDarkNotifier.value ? Icons.wb_sunny : Icons.brightness_2,
             ),
             onPressed: widget.toggleTheme,
           ),
-        ],),
+        ],
+      ),
       /*floatingActionButton: Builder(
         
         builder: (context) => FloatingActionButton(
@@ -66,9 +70,10 @@ class _HomePageState extends State<HomePage> {
                       controller: textController,
                       autofocus: true,
                       decoration: const InputDecoration(
-                        
                         hintText: 'پیام خود را بنویسید...',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(50))),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(50)),
+                        ),
                       ),
                     ),
                   ),
