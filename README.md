@@ -1,16 +1,10 @@
-# aiapp
+# Process to run
+You can see the process of building/running here:
+## The Backend
+First of all, go into `./backend` and run `npm install`
 
-A new Flutter project.
+Then, run the backend script with `npm run prod`
+## The Frontend
+Back at main directory, run `flutter pub get`
 
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Then `flutter build apk` to build the app.

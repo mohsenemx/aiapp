@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
+import 'main.dart';
+class HomePage extends StatefulWidget {
+  final VoidCallback toggleTheme;
+  HomePage({super.key, required this.toggleTheme,});
 
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
 
+class _HomePageState extends State<HomePage> {
   void dummySendMessage() {
     print('ارسال پیام...');
   }
@@ -10,7 +16,6 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textController = TextEditingController();
-
     return Scaffold(
       drawer: Drawer(
         child: SafeArea(
@@ -24,12 +29,23 @@ class HomePage extends StatelessWidget {
           ),
         ),
       ),
-      floatingActionButton: Builder(
+      appBar: AppBar(title: Text('چت بات من'),centerTitle: true, actions: [
+          IconButton(
+            icon: Icon(
+               isDarkNotifier.value ? Icons.wb_sunny : Icons.brightness_2,
+              
+            ),
+            onPressed: widget.toggleTheme,
+          ),
+        ],),
+      /*floatingActionButton: Builder(
+        
         builder: (context) => FloatingActionButton(
+
           onPressed: () => Scaffold.of(context).openDrawer(),
           child: const Icon(Icons.menu),
         ),
-      ),
+      ),*/
       body: SafeArea(
         child: Column(
           children: [
@@ -48,15 +64,16 @@ class HomePage extends StatelessWidget {
                   Expanded(
                     child: TextField(
                       controller: textController,
+                      autofocus: true,
                       decoration: const InputDecoration(
+                        
                         hintText: 'پیام خود را بنویسید...',
-                        border: OutlineInputBorder(),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(50))),
                       ),
                     ),
                   ),
                   const SizedBox(width: 8),
                   CircleAvatar(
-                    backgroundColor: Colors.blueAccent,
                     child: IconButton(
                       icon: const Icon(Icons.send, color: Colors.white),
                       onPressed: dummySendMessage,

@@ -3,7 +3,8 @@ import 'dart:async';
 import 'home_page.dart';
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+  final VoidCallback toggleTheme;
+  SplashScreen({super.key, required this.toggleTheme});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -15,7 +16,7 @@ class _SplashScreenState extends State<SplashScreen> {
     super.initState();
     Timer(const Duration(seconds: 2), () {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomePage()),
+        MaterialPageRoute(builder: (_) => HomePage(toggleTheme: widget.toggleTheme,)),
       );
     });
   }
