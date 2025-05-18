@@ -20,23 +20,24 @@ class _HomePageState extends State<HomePage> {
   final TextEditingController _homeTC = TextEditingController();
 
   void _sendFromHome() async {
-    final text = _homeTC.text.trim();
-    if (text.isEmpty) return;
+    int pointsNeeded = _homeTC.text.split(' ').length * 2;
+    if (pointsNeeded <= stars) {
+      final text = _homeTC.text.trim();
+      if (text.isEmpty) return;
 
-    // 1) Create & populate new convo
-    final title = 'چت جدید ${chatBox.length + 1}';
-    final convo = Conversation(title: title)..messages.add(Message(text, true));
+      final title = 'چت جدید ${chatBox.length + 1}';
+      final convo = Conversation(title: title)
+        ..messages.add(Message(text, true));
 
-    // 2) Persist and get its key/index
-    final int newKey = await chatBox.add(convo);
+      final int newKey = await chatBox.add(convo);
 
-    // 3) Clear input
-    _homeTC.clear();
-
-    // 4) Navigate into the new chat
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => ChatPage(convoKey: newKey)));
+      _homeTC.clear();
+      stars -= pointsNeeded;
+      box.put('count', stars);
+      Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => ChatPage(convoKey: newKey)));
+    }
   }
 
   @override

@@ -28,14 +28,19 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   void _send() {
-    final text = _tc.text.trim();
-    if (text.isEmpty) return;
-    setState(() {
-      convo.messages.add(Message(text, true));
-      convo.messages.add(Message(text, false));
-      chatBox.putAt(widget.convoKey, convo);
-      _tc.clear();
-    });
+    int pointsNeeded = _tc.text.split(' ').length * 2;
+    if (pointsNeeded <= stars) {
+      final text = _tc.text.trim();
+      if (text.isEmpty) return;
+      setState(() {
+        stars -= pointsNeeded;
+        box.put('count', stars);
+        convo.messages.add(Message(text, true));
+        convo.messages.add(Message(text, false));
+        chatBox.putAt(widget.convoKey, convo);
+        _tc.clear();
+      });
+    }
   }
 
   @override
@@ -79,6 +84,7 @@ class _ChatPageState extends State<ChatPage> {
         ],
       ),
       bottomNavigationBar: MessageInput(
+        hintText: 'متنی بنویسید....',
         controller: _tc, // or _homeTC in HomePage
         onSend: _send, // or _sendFromHome
       ),

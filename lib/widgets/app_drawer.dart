@@ -110,7 +110,7 @@ class AppDrawer extends StatelessWidget {
                       }
                       final convo = box.getAt(idx)!;
                       return ListTile(
-                        leading: const Icon(Icons.chat_bubble_outline),
+                        leading: const Icon(Icons.chat_bubble),
                         title: Text(convo.title),
                         trailing: PopupMenuButton<String>(
                           icon: const Icon(Icons.more_vert),
