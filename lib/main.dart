@@ -13,6 +13,7 @@ void main() async {
 }
 
 final isDarkNotifier = ValueNotifier<bool>(true);
+int stars = 654;
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});

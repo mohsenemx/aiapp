@@ -5,6 +5,7 @@ import 'models/conversation.dart';
 import 'chat_page.dart';
 import 'main.dart';
 import 'widgets/app_drawer.dart';
+import 'widgets/message_input.dart';
 
 class HomePage extends StatefulWidget {
   final VoidCallback toggleTheme;
@@ -69,31 +70,10 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             const Spacer(),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _homeTC,
-                      decoration: const InputDecoration(
-                        hintText: 'پیام خود را بنویسید...',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(50)),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  CircleAvatar(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    child: IconButton(
-                      icon: const Icon(Icons.send, color: Colors.white),
-                      onPressed: _sendFromHome, // ← our new logic
-                    ),
-                  ),
-                ],
-              ),
+            MessageInput(
+              controller: _homeTC,
+              onSend: _sendFromHome,
+              hintText: 'پیام خود را بنویسید...',
             ),
           ],
         ),

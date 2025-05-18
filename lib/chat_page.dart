@@ -1,9 +1,11 @@
 // lib/chat_page.dart
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'models/conversation.dart';
 import 'main.dart';
 import 'widgets/app_drawer.dart';
+import 'widgets/message_input.dart';
 
 class ChatPage extends StatefulWidget {
   final int convoKey;
@@ -42,7 +44,27 @@ class _ChatPageState extends State<ChatPage> {
       // same drawer as HomePage
       drawer: const AppDrawer(),
       appBar: AppBar(
-        title: Text(convo.title),
+        title: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(35),
+          ),
+
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                SizedBox(width: 5),
+                Text(NumberFormat.decimalPattern('fa').format(stars)),
+                SizedBox(width: 5),
+                Icon(Icons.star),
+              ],
+            ),
+          ),
+        ),
         centerTitle: true,
         actions: [
           ValueListenableBuilder<bool>(
@@ -56,7 +78,10 @@ class _ChatPageState extends State<ChatPage> {
           ),
         ],
       ),
-
+      bottomNavigationBar: MessageInput(
+        controller: _tc, // or _homeTC in HomePage
+        onSend: _send, // or _sendFromHome
+      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -94,34 +119,6 @@ class _ChatPageState extends State<ChatPage> {
                     ),
                   );
                 },
-              ),
-            ),
-
-            // Bottom input row (same as HomePage)
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _tc,
-                      decoration: const InputDecoration(
-                        hintText: 'پیام خود را بنویسید...',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(50)),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  CircleAvatar(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    child: IconButton(
-                      icon: const Icon(Icons.send, color: Colors.white),
-                      onPressed: _send,
-                    ),
-                  ),
-                ],
               ),
             ),
           ],
