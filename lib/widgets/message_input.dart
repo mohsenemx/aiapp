@@ -14,6 +14,10 @@ class MessageInput extends StatelessWidget {
     this.hintText = 'هرچی میخوایی بپرس...',
   }) : super(key: key);
 
+  void dummyAddFile() {
+    print('Opening file selector');
+  }
+
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<bool>(
@@ -60,9 +64,56 @@ class MessageInput extends StatelessWidget {
                   children: [
                     CircleAvatar(
                       backgroundColor: primary,
-                      child: IconButton(
+                      child: PopupMenuButton<String>(
                         icon: const Icon(Icons.add, color: Colors.white),
-                        onPressed: onSend,
+                        onSelected: (value) {
+                          if (value == 'camera') {
+                            // open camera to take a pic
+                          } else if (value == 'gallery') {
+                            // open gallery to pick a pic
+                          }
+                        },
+                        itemBuilder:
+                            (_) => [
+                              const PopupMenuItem(
+                                value: 'camera',
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  textBaseline: TextBaseline.alphabetic,
+                                  children: [
+                                    Icon(
+                                      Icons.camera_alt,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
+                                    SizedBox(width: 5),
+                                    Text(
+                                      'دوربین',
+                                      style: TextStyle(fontSize: 15),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const PopupMenuItem(
+                                value: 'gallery',
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  textBaseline: TextBaseline.alphabetic,
+                                  children: [
+                                    Icon(
+                                      Icons.photo_library_rounded,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
+                                    SizedBox(width: 5),
+                                    Text(
+                                      'گالری',
+                                      style: TextStyle(fontSize: 15),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                       ),
                     ),
                     CircleAvatar(
