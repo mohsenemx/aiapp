@@ -79,14 +79,17 @@ class _ChatPageState extends State<ChatPage> {
                         color:
                             m.isUser
                                 ? Theme.of(context).colorScheme.primary
-                                : Colors.grey.shade300,
+                                : Theme.of(context).colorScheme.secondary,
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: Text(
-                        m.text,
-                        style: TextStyle(
-                          color: m.isUser ? Colors.white : Colors.black87,
-                        ),
+                      child: ValueListenableBuilder<bool>(
+                        valueListenable: isDarkNotifier,
+                        builder: (_, isDark, __) {
+                          return Text(
+                            m.text,
+                            style: TextStyle(color: Colors.white),
+                          );
+                        },
                       ),
                     ),
                   );

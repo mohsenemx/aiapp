@@ -43,10 +43,13 @@ class _MyAppState extends State<MyApp> {
                 isDark
                     ? ColorScheme.dark(
                       surface: Color.fromRGBO(2, 17, 17, 1),
-                      primary: Color.fromRGBO(35, 83, 71, 1),
+                      primary: Color.fromRGBO(93, 133, 106, 1),
+                      secondary: Color.fromRGBO(35, 83, 71, 1),
                     )
                     : ColorScheme.light(
                       surface: Color.fromRGBO(218, 241, 222, 1),
+                      primary: Color.fromRGBO(37, 87, 78, 1),
+                      secondary: Color.fromRGBO(22, 56, 50, 1),
                     ),
           ),
           locale: const Locale('fa', 'IR'),

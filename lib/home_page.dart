@@ -63,7 +63,7 @@ class _HomePageState extends State<HomePage> {
             const Spacer(),
             const Center(
               child: Text(
-                'سلام! پیام خود را تایپ کنید تا چت جدید ساخته شود',
+                'سلام! ظهر بخیر.',
                 style: TextStyle(fontSize: 20),
                 textAlign: TextAlign.center,
               ),
