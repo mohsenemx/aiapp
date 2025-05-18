@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 import 'splash_screen.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'models/conversation.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Hive.initFlutter();
+  Hive.registerAdapter(MessageAdapter());
+  Hive.registerAdapter(ConversationAdapter());
+  await Hive.openBox<Conversation>('chats');
   runApp(const MyApp());
 }
 

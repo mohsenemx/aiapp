@@ -1,63 +1,71 @@
-// ignore_for_file: avoid_print, prefer_const_constructors_in_immutables
-
+// lib/home_page.dart
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'models/conversation.dart';
+import 'chat_page.dart';
 import 'main.dart';
+import 'widgets/app_drawer.dart';
 
 class HomePage extends StatefulWidget {
   final VoidCallback toggleTheme;
-  HomePage({super.key, required this.toggleTheme});
+  const HomePage({super.key, required this.toggleTheme});
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  void dummySendMessage() {
-    print('ارسال پیام...');
+  final Box<Conversation> chatBox = Hive.box<Conversation>('chats');
+  final TextEditingController _homeTC = TextEditingController();
+
+  void _sendFromHome() async {
+    final text = _homeTC.text.trim();
+    if (text.isEmpty) return;
+
+    // 1) Create & populate new convo
+    final title = 'چت جدید ${chatBox.length + 1}';
+    final convo = Conversation(title: title)..messages.add(Message(text, true));
+
+    // 2) Persist and get its key/index
+    final int newKey = await chatBox.add(convo);
+
+    // 3) Clear input
+    _homeTC.clear();
+
+    // 4) Navigate into the new chat
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => ChatPage(convoKey: newKey)));
   }
 
   @override
   Widget build(BuildContext context) {
-    final textController = TextEditingController();
     return Scaffold(
-      drawer: Drawer(
-        child: SafeArea(
-          child: Column(
-            children: const [
-              ListTile(title: Text('چت‌ها')), Spacer(),
-              // Empty for now
-            ],
-          ),
-        ),
-      ),
+      drawer: const AppDrawer(),
       appBar: AppBar(
-        title: Text('چت بات من'),
+        title: const Text('چت‌بات من'),
         centerTitle: true,
         actions: [
-          IconButton(
-            icon: Icon(
-              isDarkNotifier.value ? Icons.wb_sunny : Icons.brightness_2,
-            ),
-            onPressed: widget.toggleTheme,
+          ValueListenableBuilder<bool>(
+            valueListenable: isDarkNotifier,
+            builder: (_, isDark, __) {
+              return IconButton(
+                icon: Icon(isDark ? Icons.brightness_2 : Icons.wb_sunny),
+                onPressed: widget.toggleTheme,
+              );
+            },
           ),
         ],
       ),
-      /*floatingActionButton: Builder(
-        
-        builder: (context) => FloatingActionButton(
-
-          onPressed: () => Scaffold.of(context).openDrawer(),
-          child: const Icon(Icons.menu),
-        ),
-      ),*/
       body: SafeArea(
         child: Column(
           children: [
             const Spacer(),
             const Center(
               child: Text(
-                'سلام! بعد از ظهر بخیر ☀️',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
+                'سلام! پیام خود را تایپ کنید تا چت جدید ساخته شود',
+                style: TextStyle(fontSize: 20),
+                textAlign: TextAlign.center,
               ),
             ),
             const Spacer(),
@@ -67,8 +75,7 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   Expanded(
                     child: TextField(
-                      controller: textController,
-                      autofocus: true,
+                      controller: _homeTC,
                       decoration: const InputDecoration(
                         hintText: 'پیام خود را بنویسید...',
                         border: OutlineInputBorder(
@@ -79,9 +86,10 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(width: 8),
                   CircleAvatar(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
                     child: IconButton(
                       icon: const Icon(Icons.send, color: Colors.white),
-                      onPressed: dummySendMessage,
+                      onPressed: _sendFromHome, // ← our new logic
                     ),
                   ),
                 ],
