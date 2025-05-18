@@ -1,8 +1,10 @@
 // lib/widgets/message_input.dart
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../main.dart';
 
-class MessageInput extends StatelessWidget {
+class MessageInput extends StatefulWidget {
   final TextEditingController controller;
   final VoidCallback onSend;
   final String hintText;
@@ -14,8 +16,23 @@ class MessageInput extends StatelessWidget {
     this.hintText = 'هرچی میخوایی بپرس...',
   }) : super(key: key);
 
-  void dummyAddFile() {
-    print('Opening file selector');
+  @override
+  State<MessageInput> createState() => _MessageInputState();
+}
+
+class _MessageInputState extends State<MessageInput> {
+  XFile? _pickedImage;
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> _pickImage(ImageSource source) async {
+    final XFile? image = await _picker.pickImage(source: source);
+    if (image != null) {
+      setState(() => _pickedImage = image);
+    }
+  }
+
+  void _clearImage() {
+    setState(() => _pickedImage = null);
   }
 
   @override
@@ -24,112 +41,154 @@ class MessageInput extends StatelessWidget {
       valueListenable: isDarkNotifier,
       builder: (_, isDark, __) {
         final bg = Theme.of(context).colorScheme.surface;
-        final boxColor = isDark ? Color.fromRGBO(9, 27, 24, 1) : bg;
+        final boxColor = isDark ? const Color.fromRGBO(9, 27, 24, 1) : bg;
         final primary = Theme.of(context).colorScheme.primary;
+
         return Container(
-          width: double.infinity, // fill full width
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          width: double.infinity,
+          padding: const EdgeInsets.all(15),
           decoration: BoxDecoration(
             color: boxColor,
             borderRadius: BorderRadius.circular(30),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.5),
-                blurRadius: 15,
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 16,
                 offset: const Offset(0, 2),
               ),
             ],
           ),
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 30),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: controller,
-                  autofocus: true,
-                  maxLines: 10,
-                  minLines: 2,
-                  decoration: InputDecoration(
-                    hintText: hintText,
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                    border: InputBorder.none, // no border
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // --- image preview row ---
+              if (_pickedImage != null)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  child: Stack(
+                    alignment: Alignment.topRight,
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Container(
+                          height: 120,
+                          color:
+                              Colors
+                                  .black12, // optional: background so you see letterboxing
+                          alignment: Alignment.center,
+                          child: Image.file(
+                            File(_pickedImage!.path),
+                            height: 120,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        top: 4,
+                        right: 4,
+                        child: GestureDetector(
+                          onTap: _clearImage,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.black54,
+                              shape: BoxShape.circle,
+                            ),
+                            padding: const EdgeInsets.all(4),
+                            child: const Icon(
+                              Icons.close,
+                              size: 18,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 8),
-                Row(
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    CircleAvatar(
-                      backgroundColor: primary,
-                      child: PopupMenuButton<String>(
-                        icon: const Icon(Icons.add, color: Colors.white),
-                        onSelected: (value) {
-                          if (value == 'camera') {
-                            // open camera to take a pic
-                          } else if (value == 'gallery') {
-                            // open gallery to pick a pic
-                          }
-                        },
-                        itemBuilder:
-                            (_) => [
-                              const PopupMenuItem(
-                                value: 'camera',
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  textBaseline: TextBaseline.alphabetic,
-                                  children: [
-                                    Icon(
-                                      Icons.camera_alt,
-                                      color: Colors.white,
-                                      size: 20,
-                                    ),
-                                    SizedBox(width: 5),
-                                    Text(
-                                      'دوربین',
-                                      style: TextStyle(fontSize: 15),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const PopupMenuItem(
-                                value: 'gallery',
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  textBaseline: TextBaseline.alphabetic,
-                                  children: [
-                                    Icon(
-                                      Icons.photo_library_rounded,
-                                      color: Colors.white,
-                                      size: 20,
-                                    ),
-                                    SizedBox(width: 5),
-                                    Text(
-                                      'گالری',
-                                      style: TextStyle(fontSize: 15),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
+                    TextField(
+                      controller: widget.controller,
+                      maxLines: 10,
+                      minLines: 2,
+                      decoration: InputDecoration(
+                        hintText: widget.hintText,
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 12,
+                          horizontal: 16,
+                        ),
+                        border: InputBorder.none,
                       ),
                     ),
-                    CircleAvatar(
-                      backgroundColor: primary,
-                      child: IconButton(
-                        icon: const Icon(
-                          Icons.arrow_upward,
-                          color: Colors.white,
+                    const SizedBox(width: 8),
+                    Row(
+                      mainAxisSize: MainAxisSize.max,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        CircleAvatar(
+                          backgroundColor: primary,
+                          child: PopupMenuButton<String>(
+                            icon: const Icon(Icons.add, color: Colors.white),
+                            onSelected: (value) {
+                              if (value == 'camera') {
+                                _pickImage(ImageSource.camera);
+                              } else if (value == 'gallery') {
+                                _pickImage(ImageSource.gallery);
+                              }
+                            },
+                            itemBuilder:
+                                (_) => const [
+                                  PopupMenuItem(
+                                    value: 'camera',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.camera_alt, size: 20),
+                                        SizedBox(width: 5),
+                                        Text(
+                                          'دوربین',
+                                          style: TextStyle(fontSize: 15),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  PopupMenuItem(
+                                    value: 'gallery',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.photo_library, size: 20),
+                                        SizedBox(width: 5),
+                                        Text(
+                                          'گالری',
+                                          style: TextStyle(fontSize: 15),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                          ),
                         ),
-                        onPressed: onSend,
-                      ),
+
+                        // send button
+                        CircleAvatar(
+                          backgroundColor: primary,
+                          child: IconButton(
+                            icon: const Icon(
+                              Icons.arrow_upward,
+                              color: Colors.white,
+                            ),
+                            onPressed: widget.onSend,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         );
       },

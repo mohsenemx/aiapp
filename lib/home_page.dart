@@ -58,8 +58,13 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
+      bottomNavigationBar: MessageInput(
+        controller: _homeTC, // or _homeTC in HomePage
+        onSend: _sendFromHome, // or _sendFromHome
+      ),
       body: SafeArea(
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Spacer(),
             const Center(
@@ -70,11 +75,6 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             const Spacer(),
-            MessageInput(
-              controller: _homeTC,
-              onSend: _sendFromHome,
-              hintText: 'پیام خود را بنویسید...',
-            ),
           ],
         ),
       ),
