@@ -1,23 +1,19 @@
 import express from "express";
 import mongoose from "mongoose";
-import dotenv from "dotenv";
 import cors from "cors";
 import api from "./routes/api";
-import { resolve } from 'path';
-
-dotenv.config({ path: resolve(__dirname, 'env.dev') });
-
+import { PORT, MONGO_URI } from './env';
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use("/api", api);
 
 mongoose
-  .connect(process.env.MONGO_URI!)
+  .connect(MONGO_URI)
   .then(() => {
     console.log("Mongo connected");
-    app.listen(process.env.PORT, () =>
-      console.log(`Server running on http://localhost:${process.env.PORT}`)
+    app.listen(PORT, () =>
+      console.log(`Server running on http://localhost:${PORT}`)
     );
   })
   .catch((err) => console.error(err));
