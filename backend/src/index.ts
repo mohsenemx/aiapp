@@ -3,8 +3,9 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
 import api from "./routes/api";
+import { resolve } from 'path';
 
-dotenv.config();
+dotenv.config({ path: resolve(__dirname, 'env.dev') });
 
 const app = express();
 app.use(cors());

@@ -1,38 +1,61 @@
 // lib/widgets/app_drawer.dart
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import '../models/conversation.dart';
+import '../models/chat.dart';
+import '../services/api_service.dart';
 import '../chat_page.dart';
 
-class AppDrawer extends StatelessWidget {
-  const AppDrawer({Key? key}) : super(key: key);
+class AppDrawer extends StatefulWidget {
+  final String userId;
+  const AppDrawer({Key? key, required this.userId}) : super(key: key);
 
-  Box<Conversation> get _chatBox => Hive.box<Conversation>('chats');
+  @override
+  State<AppDrawer> createState() => _AppDrawerState();
+}
 
-  void _createNewChat(BuildContext context) async {
-    final box = _chatBox;
-    final title = 'چت جدید ${box.length + 1}';
-    final int newKey = await box.add(Conversation(title: title));
-    Navigator.of(context).pop();
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => ChatPage(convoKey: newKey)));
+class _AppDrawerState extends State<AppDrawer> {
+  List<Chat> _chats = [];
+  bool _loading = true;
+
+  Future<void> _loadChats() async {
+    setState(() => _loading = true);
+    try {
+      _chats = await ApiService.instance.getChats(widget.userId);
+    } catch (e) {
+      // optionally show error
+    } finally {
+      setState(() => _loading = false);
+    }
   }
 
-  Future<void> _renameChat(BuildContext context, int idx) async {
-    final box = _chatBox;
-    final convo = box.getAt(idx)!;
-    final controller = TextEditingController(text: convo.title);
+  @override
+  void initState() {
+    super.initState();
+    _loadChats();
+  }
 
+  void _createNewChat() async {
+    final newChat = await ApiService.instance.createChat(
+      widget.userId,
+      'چت جدید ${_chats.length + 1}',
+    );
+    setState(() => _chats.add(newChat));
+    Navigator.of(context).pop();
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ChatPage(userId: widget.userId, chat: newChat),
+      ),
+    );
+  }
+
+  void _renameChat(int idx) async {
+    final chat = _chats[idx];
+    final controller = TextEditingController(text: chat.name);
     final newName = await showDialog<String>(
       context: context,
       builder:
           (ctx) => AlertDialog(
             title: const Text('تغییر نام چت'),
-            content: TextField(
-              controller: controller,
-              decoration: const InputDecoration(hintText: 'نام جدید'),
-            ),
+            content: TextField(controller: controller),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
@@ -45,16 +68,22 @@ class AppDrawer extends StatelessWidget {
             ],
           ),
     );
-
     if (newName != null && newName.isNotEmpty) {
-      convo.title = newName;
-      box.putAt(idx, convo);
+      await ApiService.instance.renameChat(chat.id, newName);
+      setState(
+        () =>
+            _chats[idx] = Chat(
+              id: chat.id,
+              userId: chat.userId,
+              name: newName,
+              createdAt: chat.createdAt,
+            ),
+      );
     }
   }
 
-  void _deleteChat(BuildContext context, int idx) {
-    final box = _chatBox;
-    showDialog(
+  void _deleteChat(int idx) async {
+    final ok = await showDialog<bool>(
       context: context,
       builder:
           (ctx) => AlertDialog(
@@ -62,25 +91,25 @@ class AppDrawer extends StatelessWidget {
             content: const Text('آیا از حذف این چت مطمئنید؟'),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(ctx),
+                onPressed: () => Navigator.pop(ctx, false),
                 child: const Text('خیر'),
               ),
               TextButton(
-                onPressed: () {
-                  box.deleteAt(idx);
-                  Navigator.pop(ctx); // close confirmation
-                  Navigator.pop(context); // close drawer
-                },
+                onPressed: () => Navigator.pop(ctx, true),
                 child: const Text('بله'),
               ),
             ],
           ),
     );
+    if (ok == true) {
+      final chat = _chats[idx];
+      await ApiService.instance.deleteChat(chat.id);
+      setState(() => _chats.removeAt(idx));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final box = _chatBox;
     return Drawer(
       child: SafeArea(
         child: Column(
@@ -91,62 +120,55 @@ class AppDrawer extends StatelessWidget {
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
-            Expanded(
-              child: ValueListenableBuilder(
-                valueListenable: box.listenable(),
-                builder: (_, Box<Conversation> box, __) {
-                  if (box.isEmpty) {
-                    return const Center(child: Text('هنوز چتی ساخته نشده'));
-                  }
-                  return ListView.builder(
-                    itemCount: box.length + 1,
-                    itemBuilder: (ctx, idx) {
-                      if (idx == box.length) {
-                        return ListTile(
-                          leading: const Icon(Icons.add_circle_outline),
-                          title: const Text('چت جدید'),
-                          onTap: () => _createNewChat(context),
-                        );
-                      }
-                      final convo = box.getAt(idx)!;
+            if (_loading)
+              const Expanded(child: Center(child: CircularProgressIndicator())),
+            if (!_loading)
+              Expanded(
+                child: ListView.builder(
+                  itemCount: _chats.length + 1,
+                  itemBuilder: (ctx, idx) {
+                    if (idx == _chats.length) {
                       return ListTile(
-                        leading: const Icon(Icons.chat_bubble),
-                        title: Text(convo.title),
-                        trailing: PopupMenuButton<String>(
-                          icon: const Icon(Icons.more_vert),
-                          onSelected: (value) {
-                            if (value == 'rename') {
-                              _renameChat(context, idx);
-                            } else if (value == 'delete') {
-                              _deleteChat(context, idx);
-                            }
-                          },
-                          itemBuilder:
-                              (_) => [
-                                const PopupMenuItem(
-                                  value: 'rename',
-                                  child: Text('تغییر نام'),
-                                ),
-                                const PopupMenuItem(
-                                  value: 'delete',
-                                  child: Text('حذف'),
-                                ),
-                              ],
-                        ),
-                        onTap: () {
-                          Navigator.of(context).pop();
-                          Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(
-                              builder: (_) => ChatPage(convoKey: idx),
-                            ),
-                          );
-                        },
+                        leading: const Icon(Icons.add_circle_outline),
+                        title: const Text('چت جدید'),
+                        onTap: _createNewChat,
                       );
-                    },
-                  );
-                },
+                    }
+                    final c = _chats[idx];
+                    return ListTile(
+                      leading: const Icon(Icons.chat_bubble_outline),
+                      title: Text(c.name),
+                      trailing: PopupMenuButton<String>(
+                        icon: const Icon(Icons.more_vert),
+                        onSelected: (v) {
+                          if (v == 'rename') _renameChat(idx);
+                          if (v == 'delete') _deleteChat(idx);
+                        },
+                        itemBuilder:
+                            (_) => const [
+                              PopupMenuItem(
+                                value: 'rename',
+                                child: Text('تغییر نام'),
+                              ),
+                              PopupMenuItem(
+                                value: 'delete',
+                                child: Text('حذف'),
+                              ),
+                            ],
+                      ),
+                      onTap: () {
+                        Navigator.of(context).pop();
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder:
+                                (_) => ChatPage(userId: widget.userId, chat: c),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
-            ),
           ],
         ),
       ),

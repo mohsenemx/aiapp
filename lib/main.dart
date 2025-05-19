@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'splash_screen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'models/conversation.dart';
+import 'package:uuid/uuid.dart';
 
 late Box box;
+late String userId;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
@@ -12,10 +14,19 @@ void main() async {
   await Hive.openBox<Conversation>('chats');
   await Hive.openBox('stars');
   box = Hive.box('stars');
-  if (box.get('count') != null) {
+  if (box.get('count') == null) {
     box.put('count', 100);
+  } else {
+    stars = box.get('count');
   }
-  stars = box.get('count');
+  if (box.get('userId') != null) {
+    userId = box.get('userId');
+    print(userId);
+  } else {
+    var uuid = Uuid();
+    userId = uuid.v4();
+    box.put('userId', userId);
+  }
   runApp(const MyApp());
 }
 
@@ -62,7 +73,7 @@ class _MyAppState extends State<MyApp> {
           ),
           locale: const Locale('fa', 'IR'),
           debugShowCheckedModeBanner: false,
-          home: SplashScreen(toggleTheme: toggleTheme),
+          home: SplashScreen(toggleTheme: toggleTheme, userId: userId),
           builder: (context, child) {
             return Directionality(
               textDirection: TextDirection.rtl,

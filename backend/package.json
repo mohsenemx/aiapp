@@ -9,6 +9,7 @@
     "expressjs": "^1.0.1",
     "mongoose": "^8.15.0",
     "openai": "^4.100.0",
+    "path": "^0.12.7",
     "uuid": "^11.1.0"
   },
   "devDependencies": {

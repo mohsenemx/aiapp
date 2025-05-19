@@ -1,82 +1,101 @@
 // lib/home_page.dart
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'models/conversation.dart';
-import 'chat_page.dart';
-import 'main.dart';
 import 'widgets/app_drawer.dart';
 import 'widgets/message_input.dart';
+import 'services/api_service.dart';
+import 'chat_page.dart';
+import 'main.dart'; // for isDarkNotifier
 
 class HomePage extends StatefulWidget {
   final VoidCallback toggleTheme;
-  const HomePage({super.key, required this.toggleTheme});
+  final String userId;
+
+  const HomePage({Key? key, required this.toggleTheme, required this.userId})
+    : super(key: key);
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  final Box<Conversation> chatBox = Hive.box<Conversation>('chats');
   final TextEditingController _homeTC = TextEditingController();
+  bool _sending = false;
 
-  void _sendFromHome() async {
-    int pointsNeeded = _homeTC.text.split(' ').length * 2;
-    if (pointsNeeded <= stars) {
-      final text = _homeTC.text.trim();
-      if (text.isEmpty) return;
+  Future<void> _sendFromHome() async {
+    final text = _homeTC.text.trim();
+    if (text.isEmpty) return;
 
-      final title = 'چت جدید ${chatBox.length + 1}';
-      final convo = Conversation(title: title)
-        ..messages.add(Message(text, true));
+    setState(() => _sending = true);
+    try {
+      // 1. Create a new chat on the server
+      final chat = await ApiService.instance.createChat(
+        widget.userId,
+        'چت جدید', // or whatever default title you prefer
+      );
 
-      final int newKey = await chatBox.add(convo);
+      // 2. Optionally send the very first message now (user + AI reply)
+      await ApiService.instance.sendMessage(
+        userId: widget.userId,
+        chatId: chat.id,
+        text: text,
+      );
 
+      // 3. Clear the input
       _homeTC.clear();
-      stars -= pointsNeeded;
-      box.put('count', stars);
-      Navigator.of(
-        context,
-      ).push(MaterialPageRoute(builder: (_) => ChatPage(convoKey: newKey)));
+
+      // 4. Navigate into the new chat page
+      if (!mounted) return;
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => ChatPage(userId: widget.userId, chat: chat),
+        ),
+      );
+    } catch (e) {
+      // handle error if needed
+    } finally {
+      setState(() => _sending = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: const AppDrawer(),
+      drawer: AppDrawer(userId: widget.userId),
       appBar: AppBar(
         title: const Text('چت‌بات من'),
         centerTitle: true,
         actions: [
           ValueListenableBuilder<bool>(
             valueListenable: isDarkNotifier,
-            builder: (_, isDark, __) {
-              return IconButton(
-                icon: Icon(isDark ? Icons.brightness_2 : Icons.wb_sunny),
-                onPressed: widget.toggleTheme,
-              );
-            },
+            builder:
+                (_, isDark, __) => IconButton(
+                  icon: Icon(isDark ? Icons.brightness_2 : Icons.wb_sunny),
+                  onPressed: widget.toggleTheme,
+                ),
           ),
         ],
       ),
-      bottomNavigationBar: MessageInput(
-        controller: _homeTC, // or _homeTC in HomePage
-        onSend: _sendFromHome, // or _sendFromHome
-      ),
       body: SafeArea(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Spacer(),
             const Center(
               child: Text(
-                'سلام! ظهر بخیر.',
+                'سلام! پیام خود را تایپ کنید تا چت جدید ساخته شود',
                 style: TextStyle(fontSize: 20),
                 textAlign: TextAlign.center,
               ),
             ),
             const Spacer(),
           ],
+        ),
+      ),
+      bottomNavigationBar: AbsorbPointer(
+        absorbing: _sending,
+        child: MessageInput(
+          controller: _homeTC,
+          onSend: _sendFromHome,
+          hintText: _sending ? 'در حال ارسال…' : 'هرچی میخوایی بپرس...',
         ),
       ),
     );

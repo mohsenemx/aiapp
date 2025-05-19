@@ -1,6 +1,8 @@
 
 node_modules/
+dist/
 secret
+env.dev
 # Miscellaneous
 *.class
 *.log
