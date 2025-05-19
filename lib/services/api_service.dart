@@ -8,7 +8,7 @@ class ApiService {
   static final ApiService instance = ApiService._privateCtor();
 
   // Replace with your server’s URL
-  final String _baseUrl = 'http://192.168.1.91:3001/api';
+  final String _baseUrl = 'http://194.145.119.252:3001/api';
 
   // Helpers
   Future<http.Response> _get(String path) =>

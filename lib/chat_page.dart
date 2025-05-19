@@ -1,4 +1,6 @@
 // lib/chat_page.dart
+// ignore_for_file: unused_field
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'main.dart';
