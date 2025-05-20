@@ -97,20 +97,20 @@ export const guest: RequestHandler = async (req, res) => {
        res.status(400).json({ message: "UUID is required" });
     }
 
-    // If you're storing multiple UUIDs in an array, use `uuids: uuid`
-    // If you added a single `uuid` field to the schema, keep { uuid }
-    let user = await User.findOne({ uuid }) as IUserDocument | null;
-
+    // Find by guestUuid
+    let user = await User.findOne({ guestUuid: uuid }) as IUserDocument | null;
     if (user) {
        res.json({ userId: user._id });
     }
 
-    // Create a new user with 250 stars
-    user = new User({ uuid, stars: 250, uuids: [] });
-    // If you want to push the uuid into `uuids`:
-    user.uuids.push(uuid);
-
+    // Create new guest user
+    user = new User({
+      guestUuid: uuid,
+      stars: 250,
+      uuids: [],    // OTP logins go here later
+    });
     await user.save();
+
      res.status(201).json({ userId: user._id });
 
   } catch (e) {
