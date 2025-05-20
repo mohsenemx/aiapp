@@ -1,5 +1,7 @@
+// lib/services/api_service.dart
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:hive_flutter/hive_flutter.dart';
 import '../models/chat.dart';
 import '../models/message.dart';
 
@@ -7,10 +9,24 @@ class ApiService {
   ApiService._privateCtor();
   static final ApiService instance = ApiService._privateCtor();
 
-  // Replace with your server’s URL
   final String _baseUrl = 'http://194.145.119.252:3001/api';
 
-  // Helpers
+  // Hive box for storing settings
+  Box? _settingsBox;
+
+  Future<void> init() async {
+    _settingsBox = await Hive.openBox('settings');
+  }
+
+  String? get currentUserId => _settingsBox?.get('userId') as String?;
+  String? get phoneNumber => _settingsBox?.get('phone') as String?;
+  bool get isLoggedIn => currentUserId != null && phoneNumber != null;
+
+  Future<void> _saveLogin(String phone, String userId) async {
+    await _settingsBox?.put('phone', phone);
+    await _settingsBox?.put('userId', userId);
+  }
+
   Future<http.Response> _get(String path) =>
       http.get(Uri.parse('$_baseUrl$path'));
 
@@ -29,10 +45,42 @@ class ApiService {
   Future<http.Response> _delete(String path) =>
       http.delete(Uri.parse('$_baseUrl$path'));
 
-  // 1) Chats
+  // ── AUTH ─────────────────────────────────────────────
 
-  Future<List<Chat>> getChats(String userId) async {
-    final res = await _get('/chats/$userId');
+  /// Ask server to send OTP to [phone]. Returns seconds until expiry.
+  Future<int> sendOtp(String phone) async {
+    final res = await _post('/auth/send-otp', {'phone': phone});
+    if (res.statusCode == 200) {
+      final data = jsonDecode(res.body);
+      return data['expiresIn'] as int;
+    }
+    throw Exception('Failed to send OTP');
+  }
+
+  /// Verify [otp] for [phone], store userId+phone in Hive on success.
+  Future<String> verifyOtp(String phone, String otp) async {
+    final res = await _post('/auth/verify-otp', {'phone': phone, 'otp': otp});
+    if (res.statusCode == 200) {
+      final data = jsonDecode(res.body);
+      final userId = data['userId'] as String;
+      await _saveLogin(phone, userId);
+      return userId;
+    }
+    throw Exception('OTP verification failed');
+  }
+
+  /// Log out the user locally
+  Future<void> logout() async {
+    await _settingsBox?.delete('phone');
+    await _settingsBox?.delete('userId');
+  }
+
+  // ── CHATS & MESSAGES ─────────────────────────────────
+
+  Future<List<Chat>> getChats() async {
+    final uid = currentUserId;
+    if (uid == null) throw Exception('No userId stored');
+    final res = await _get('/chats/$uid');
     if (res.statusCode == 200) {
       final List data = jsonDecode(res.body);
       return data.map((j) => Chat.fromJson(j)).toList();
@@ -40,8 +88,10 @@ class ApiService {
     throw Exception('Failed to load chats');
   }
 
-  Future<Chat> createChat(String userId, String name) async {
-    final res = await _post('/chats', {'userId': userId, 'name': name});
+  Future<Chat> createChat(String name) async {
+    final uid = currentUserId;
+    if (uid == null) throw Exception('No userId stored');
+    final res = await _post('/chats', {'userId': uid, 'name': name});
     if (res.statusCode == 200 || res.statusCode == 201) {
       return Chat.fromJson(jsonDecode(res.body));
     }
@@ -62,8 +112,6 @@ class ApiService {
     }
   }
 
-  // 2) Messages
-
   Future<List<Message>> getMessages(String chatId) async {
     final res = await _get('/messages/$chatId');
     if (res.statusCode == 200) {
@@ -73,14 +121,14 @@ class ApiService {
     throw Exception('Failed to load messages');
   }
 
-  /// Sends a user message and returns [userMsg, aiMsg]
   Future<List<Message>> sendMessage({
-    required String userId,
     required String chatId,
     required String text,
   }) async {
+    final uid = currentUserId;
+    if (uid == null) throw Exception('No userId stored');
     final res = await _post('/messages', {
-      'userId': userId,
+      'userId': uid,
       'chatId': chatId,
       'text': text,
     });
@@ -89,5 +137,14 @@ class ApiService {
       return data.map((j) => Message.fromJson(j)).toList();
     }
     throw Exception('Failed to send message');
+  }
+
+  Future<int> resendOtp(String phone) async {
+    final res = await _post('/auth/resend-otp', {'phone': phone});
+    if (res.statusCode == 200) {
+      final data = jsonDecode(res.body);
+      return data['expiresIn'] as int;
+    }
+    throw Exception('Failed to resend OTP');
   }
 }

@@ -1,8 +1,10 @@
 // lib/widgets/app_drawer.dart
+
 import 'package:flutter/material.dart';
 import '../models/chat.dart';
 import '../services/api_service.dart';
 import '../chat_page.dart';
+import '../login_page.dart';
 
 class AppDrawer extends StatefulWidget {
   final String userId;
@@ -19,7 +21,7 @@ class _AppDrawerState extends State<AppDrawer> {
   Future<void> _loadChats() async {
     setState(() => _loading = true);
     try {
-      _chats = await ApiService.instance.getChats(widget.userId);
+      _chats = await ApiService.instance.getChats();
     } catch (e) {
       // optionally show error
     } finally {
@@ -35,7 +37,6 @@ class _AppDrawerState extends State<AppDrawer> {
 
   void _createNewChat() async {
     final newChat = await ApiService.instance.createChat(
-      widget.userId,
       'چت جدید ${_chats.length + 1}',
     );
     setState(() => _chats.add(newChat));
@@ -108,6 +109,13 @@ class _AppDrawerState extends State<AppDrawer> {
     }
   }
 
+  void _goToLogin() {
+    Navigator.of(context).pop(); // close drawer
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const LoginPage()));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Drawer(
@@ -169,6 +177,44 @@ class _AppDrawerState extends State<AppDrawer> {
                   },
                 ),
               ),
+            const Divider(),
+
+            ApiService.instance.isLoggedIn
+                ? ListTile(
+                  leading: const Icon(Icons.phone_android),
+                  title: Text(ApiService.instance.phoneNumber!),
+                  onTap: () {
+                    // optionally log out:
+                    showDialog(
+                      context: context,
+                      builder:
+                          (ctx) => AlertDialog(
+                            title: const Text('خروج'),
+                            content: const Text('آیا مطمئن به خروج هستید؟'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx),
+                                child: const Text('خیر'),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  ApiService.instance.logout();
+                                  Navigator.pop(ctx); // close dialog
+                                  Navigator.pop(context); // close drawer
+                                  setState(() {}); // rebuild drawer
+                                },
+                                child: const Text('بله'),
+                              ),
+                            ],
+                          ),
+                    );
+                  },
+                )
+                : ListTile(
+                  leading: const Icon(Icons.login),
+                  title: const Text('ورود / ثبت‌نام'),
+                  onTap: _goToLogin,
+                ),
           ],
         ),
       ),

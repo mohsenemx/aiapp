@@ -5,6 +5,7 @@ import 'widgets/message_input.dart';
 import 'services/api_service.dart';
 import 'chat_page.dart';
 import 'main.dart'; // for isDarkNotifier
+import 'models/message.dart';
 
 class HomePage extends StatefulWidget {
   final VoidCallback toggleTheme;
@@ -27,31 +28,35 @@ class _HomePageState extends State<HomePage> {
 
     setState(() => _sending = true);
     try {
-      // 1. Create a new chat on the server
-      final chat = await ApiService.instance.createChat(
-        widget.userId,
-        'چت جدید', // or whatever default title you prefer
-      );
-
-      // 2. Optionally send the very first message now (user + AI reply)
-      await ApiService.instance.sendMessage(
-        userId: widget.userId,
+      // 1) Create a new chat on the backend
+      final chat = await ApiService.instance.createChat('چت جدید');
+      final userMsg = Message(
+        id: '', // temporary
         chatId: chat.id,
+        userId: widget.userId,
         text: text,
+        isUser: true,
+        createdAt: DateTime.now(),
       );
 
-      // 3. Clear the input
+      // 2) Clear input and reset sending state
       _homeTC.clear();
 
-      // 4. Navigate into the new chat page
+      // 3) Navigate instantly, passing the initial user message
       if (!mounted) return;
       Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (_) => ChatPage(userId: widget.userId, chat: chat),
+          builder:
+              (_) => ChatPage(
+                userId: widget.userId,
+                chat: chat,
+                initialMessages: [userMsg],
+                pendingUserText: text,
+              ),
         ),
       );
     } catch (e) {
-      // handle error if needed
+      // TODO: show error toast/snackbar
     } finally {
       setState(() => _sending = false);
     }

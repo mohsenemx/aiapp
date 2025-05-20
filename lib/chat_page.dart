@@ -13,8 +13,15 @@ import 'models/chat.dart';
 class ChatPage extends StatefulWidget {
   final String userId;
   final Chat chat;
-  const ChatPage({Key? key, required this.userId, required this.chat})
-    : super(key: key);
+  final List<Message>? initialMessages;
+  final String? pendingUserText;
+  const ChatPage({
+    Key? key,
+    required this.userId,
+    required this.chat,
+    this.initialMessages,
+    this.pendingUserText,
+  }) : super(key: key);
 
   @override
   State<ChatPage> createState() => _ChatPageState();
@@ -40,7 +47,17 @@ class _ChatPageState extends State<ChatPage> {
   @override
   void initState() {
     super.initState();
-    _loadMessages();
+    if (widget.initialMessages != null) {
+      _messages = widget.initialMessages!;
+      _loading = false;
+      _scrollToBottom();
+
+      // then ask the AI
+      _fetchAiReply(widget.pendingUserText!);
+      ;
+    } else {
+      _loadMessages();
+    }
   }
 
   void _scrollToBottom() {
@@ -56,11 +73,27 @@ class _ChatPageState extends State<ChatPage> {
     });
   }
 
+  Future<void> _fetchAiReply(String text) async {
+    // show a loading indicator if you like
+    try {
+      final result = await ApiService.instance.sendMessage(
+        chatId: widget.chat.id,
+        text: text,
+      );
+      final aiMsg = result[1]; // only the AI bubble
+      setState(() {
+        _messages.add(aiMsg);
+      });
+      _scrollToBottom();
+    } catch (e) {
+      // handle error
+    }
+  }
+
   Future<void> _send(String text) async {
     final trimmed = text.trim();
     if (trimmed.isEmpty) return;
 
-    // 1) show user message instantly
     setState(() {
       _messages.add(
         Message(
@@ -80,7 +113,6 @@ class _ChatPageState extends State<ChatPage> {
     // 2) call API for AI reply
     try {
       final results = await ApiService.instance.sendMessage(
-        userId: widget.userId,
         chatId: widget.chat.id,
         text: trimmed,
       );
