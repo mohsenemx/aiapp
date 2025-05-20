@@ -1,33 +1,12 @@
 import 'package:flutter/material.dart';
 import 'splash_screen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'models/conversation.dart';
-import 'package:uuid/uuid.dart';
 import 'services/api_service.dart';
 
-late Box box;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
-  Hive.registerAdapter(MessageAdapter());
-  Hive.registerAdapter(ConversationAdapter());
   await ApiService.instance.init();
-  await Hive.openBox<Conversation>('chats');
-  await Hive.openBox('stars');
-  /*box = Hive.box('stars');
-  if (box.get('count') == null) {
-    box.put('count', 100);
-  } else {
-    stars = box.get('count');
-  }
-  if (box.get('userId') != null) {
-    userId = box.get('userId');
-    print(userId);
-  } else {
-    var uuid = Uuid();
-    userId = uuid.v4();
-    box.put('userId', userId);
-  }*/
   runApp(const MyApp());
 }
 
