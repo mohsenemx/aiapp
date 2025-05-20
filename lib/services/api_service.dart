@@ -1,7 +1,10 @@
 // lib/services/api_service.dart
+// ignore_for_file: avoid_print
+
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:uuid/uuid.dart';
 import '../models/chat.dart';
 import '../models/message.dart';
 
@@ -11,11 +14,15 @@ class ApiService {
 
   final String _baseUrl = 'http://194.145.119.252:3001/api';
 
-  // Hive box for storing settings
   Box? _settingsBox;
-
   Future<void> init() async {
     _settingsBox = await Hive.openBox('settings');
+
+    if (currentUserId != null) return;
+    final guestUuid = const Uuid().v4();
+    final serverUserId = await _registerGuest(guestUuid);
+
+    await _settingsBox?.put('userId', serverUserId);
   }
 
   String? get currentUserId => _settingsBox?.get('userId') as String?;
@@ -91,6 +98,7 @@ class ApiService {
   Future<Chat> createChat(String name) async {
     final uid = currentUserId;
     if (uid == null) throw Exception('No userId stored');
+
     final res = await _post('/chats', {'userId': uid, 'name': name});
     if (res.statusCode == 200 || res.statusCode == 201) {
       return Chat.fromJson(jsonDecode(res.body));
@@ -151,11 +159,25 @@ class ApiService {
   Future<int> getStars() async {
     final uid = currentUserId;
     if (uid == null) throw Exception('No userId stored');
-    final res = await _get('/users/$uid/stars');
-    if (res.statusCode == 200) {
-      final data = jsonDecode(res.body);
-      return data['stars'] as int;
+    try {
+      final res = await _get('/users/$uid/stars');
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        return data['stars'] as int;
+      }
+      throw Exception('Failed to fetch stars');
+    } catch (e) {
+      print('Something went really wrong, didnt fetch stars.');
+      return 0;
     }
-    throw Exception('Failed to fetch stars');
+  }
+
+  Future<String> _registerGuest(String uuid) async {
+    final res = await _post('/auth/guest', {'uuid': uuid});
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      final data = jsonDecode(res.body);
+      return data['userId'];
+    }
+    throw Exception('Failed to register guest');
   }
 }

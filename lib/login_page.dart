@@ -110,14 +110,21 @@ class _LoginPageState extends State<LoginPage> {
               TextField(
                 controller: _phoneCtrl,
                 keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'شماره موبایل',
                   hintText: '+989123456789',
-                  border: OutlineInputBorder(),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(25),
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
               ElevatedButton(
+                style: ButtonStyle(
+                  backgroundColor: WidgetStatePropertyAll(
+                    Theme.of(context).colorScheme.primary,
+                  ),
+                ),
                 onPressed: _loading ? null : _sendOtp,
                 child:
                     _loading
@@ -126,7 +133,10 @@ class _LoginPageState extends State<LoginPage> {
                           height: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                        : const Text('ارسال کد'),
+                        : const Text(
+                          'ارسال کد',
+                          style: TextStyle(color: Colors.white),
+                        ),
               ),
             ] else ...[
               TextField(

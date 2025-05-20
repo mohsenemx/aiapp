@@ -66,9 +66,12 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      setState(() async {
-        stars = await ApiService.instance.getStars();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final fetched = await ApiService.instance.getStars();
+      // now update state synchronously
+      if (!mounted) return;
+      setState(() {
+        stars = fetched;
       });
     });
   }

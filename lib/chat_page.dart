@@ -37,15 +37,20 @@ class _ChatPageState extends State<ChatPage> {
 
   Future<void> _loadMessages() async {
     setState(() => _loading = true);
-    setState(() async {
-      stars = await ApiService.instance.getStars();
-    });
     final msgs = await ApiService.instance.getMessages(widget.chat.id);
     setState(() {
       _messages = msgs;
       _loading = false;
     });
     _scrollToBottom();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final fetched = await ApiService.instance.getStars();
+      // now update state synchronously
+      if (!mounted) return;
+      setState(() {
+        stars = fetched;
+      });
+    });
   }
 
   @override
@@ -228,6 +233,7 @@ class _ChatPageState extends State<ChatPage> {
       bottomNavigationBar: MessageInput(
         hintText: 'متنی بنویسید....',
         controller: _tc,
+        enabled: !_sending,
         onSend: () => _send(_tc.text),
       ),
     );

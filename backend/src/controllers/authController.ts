@@ -1,15 +1,15 @@
 // src/controllers/authController.ts
-import { RequestHandler } from 'express';
-import { User, IUserDocument } from '../models/User';
+import { RequestHandler } from "express";
+import { User, IUserDocument } from "../models/User";
 
-const OTP_CODE = '9999';
+const OTP_CODE = "9999";
 const OTP_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 // POST /auth/send-otp
 export const sendOtp: RequestHandler = async (req, res) => {
   const { phone } = req.body;
   if (!phone) {
-    res.status(400).json({ error: 'phone required' });
+    res.status(400).json({ error: "phone required" });
     return;
   }
 
@@ -38,18 +38,18 @@ export const sendOtp: RequestHandler = async (req, res) => {
 export const verifyOtp: RequestHandler = async (req, res) => {
   const { phone, otp } = req.body;
   if (!phone || !otp) {
-    res.status(400).json({ error: 'phone and otp required' });
+    res.status(400).json({ error: "phone and otp required" });
     return;
   }
 
-  const user = await User.findOne({ phone }) as IUserDocument | null;
+  const user = (await User.findOne({ phone })) as IUserDocument | null;
   if (
     !user ||
     user.otp !== otp ||
     !user.otpExpiresAt ||
     user.otpExpiresAt < new Date()
   ) {
-    res.status(400).json({ error: 'invalid or expired otp' });
+    res.status(400).json({ error: "invalid or expired otp" });
     return;
   }
 
@@ -65,7 +65,7 @@ export const verifyOtp: RequestHandler = async (req, res) => {
 export const resendOtp: RequestHandler = async (req, res) => {
   const { phone } = req.body;
   if (!phone) {
-    res.status(400).json({ error: 'phone required' });
+    res.status(400).json({ error: "phone required" });
     return;
   }
 
@@ -84,9 +84,25 @@ export const resendOtp: RequestHandler = async (req, res) => {
 export const getStars: RequestHandler = async (req, res) => {
   const { userId } = req.params;
   // find the user whose uuids array contains this client UUID
-  const user = await User.findOne({ uuids: userId }) as IUserDocument | null;
+  const user = (await User.findOne({ uuids: userId })) as IUserDocument | null;
   if (!user) {
-     res.status(404).json({ error: 'User not found' });
+    res.status(404).json({ error: "User not found" });
   }
   res.json({ stars: user!.stars });
-}
+};
+export const guest: RequestHandler = async (req, res) => {
+  try {
+    const { uuid } = req.body;
+    if (!uuid) res.status(400).json({ message: "UUID is required" });
+
+    let user = await User.findOne({ uuid });
+    if (user) res.json({ userId: user._id });
+
+    user = new User({ uuid, stars: 250 });
+    await user.save();
+
+    res.status(201).json({ userId: user._id });
+  } catch (e) {
+    res.status(500).json({ message: "Server error" });
+  }
+};

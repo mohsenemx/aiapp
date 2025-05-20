@@ -3,7 +3,13 @@ import Chat from "../models/Chat";
 import Message from "../models/Message";
 import { openai } from "../utils/openai";
 // ① Do a *named* import of just the functions:
-import { resendOtp, sendOtp, verifyOtp, getStars } from "../controllers/authController";
+import {
+  resendOtp,
+  sendOtp,
+  verifyOtp,
+  getStars,
+  guest,
+} from "../controllers/authController";
 
 const router = express.Router();
 
@@ -12,8 +18,9 @@ const router = express.Router();
 router.post("/auth/send-otp", sendOtp);
 router.post("/auth/verify-otp", verifyOtp);
 router.post("/auth/resend-otp", resendOtp);
-
 router.get("/users/:userId/stars", getStars);
+
+router.post("/auth/guest", guest);
 // ── CHAT CRUD ─────────────────────────────────────────
 router.get("/chats/:userId", async (req, res) => {
   const chats = await Chat.find({ userId: req.params.userId });

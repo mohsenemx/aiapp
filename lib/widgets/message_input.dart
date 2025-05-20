@@ -9,12 +9,13 @@ class MessageInput extends StatefulWidget {
   final TextEditingController controller;
   final VoidCallback onSend;
   final String hintText;
-
+  final bool enabled;
   const MessageInput({
     Key? key,
     required this.controller,
     required this.onSend,
     this.hintText = 'هرچی میخوایی بپرس...',
+    this.enabled = true,
   }) : super(key: key);
 
   @override
@@ -222,18 +223,27 @@ class _MessageInputState extends State<MessageInput> {
                               // send button
                               CircleAvatar(
                                 backgroundColor: primary,
-                                child: IconButton(
-                                  icon: const Icon(
-                                    Icons.arrow_upward,
-                                    color: Colors.white,
-                                  ),
-                                  onPressed: () {
-                                    setState(() {
-                                      pointsNeeded = 0;
-                                    });
-                                    widget.onSend();
-                                  },
-                                ),
+                                child:
+                                    widget.enabled
+                                        ? IconButton(
+                                          style: ButtonStyle(),
+                                          icon: Icon(
+                                            Icons.arrow_upward,
+                                            color: Colors.white,
+                                          ),
+                                          onPressed: () {
+                                            setState(() {
+                                              pointsNeeded = 0;
+                                            });
+                                            widget.onSend();
+                                          },
+                                        )
+                                        : Padding(
+                                          padding: const EdgeInsets.all(10.0),
+                                          child: CircularProgressIndicator(
+                                            color: Colors.white,
+                                          ),
+                                        ),
                               ),
                             ],
                           );
