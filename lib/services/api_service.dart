@@ -177,6 +177,7 @@ class ApiService {
       final data = jsonDecode(res.body);
       return data['userId'];
     }
+    print(res.body);
     throw Exception('Failed to register guest');
   }
 }

@@ -93,16 +93,28 @@ export const getStars: RequestHandler = async (req, res) => {
 export const guest: RequestHandler = async (req, res) => {
   try {
     const { uuid } = req.body;
-    if (!uuid) res.status(400).json({ message: "UUID is required" });
+    if (!uuid) {
+       res.status(400).json({ message: "UUID is required" });
+    }
 
-    let user = await User.findOne({ uuid });
-    if (user) res.json({ userId: user._id });
+    // If you're storing multiple UUIDs in an array, use `uuids: uuid`
+    // If you added a single `uuid` field to the schema, keep { uuid }
+    let user = await User.findOne({ uuid }) as IUserDocument | null;
 
-    user = new User({ uuid, stars: 250 });
+    if (user) {
+       res.json({ userId: user._id });
+    }
+
+    // Create a new user with 250 stars
+    user = new User({ uuid, stars: 250, uuids: [] });
+    // If you want to push the uuid into `uuids`:
+    user.uuids.push(uuid);
+
     await user.save();
+     res.status(201).json({ userId: user._id });
 
-    res.status(201).json({ userId: user._id });
   } catch (e) {
-    res.status(500).json({ message: "Server error" });
+    console.error("guest signup error:", e);
+     res.status(500).json({ message: "Server error" });
   }
 };
