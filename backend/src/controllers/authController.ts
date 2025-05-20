@@ -1,6 +1,7 @@
 // src/controllers/authController.ts
 import { RequestHandler } from "express";
 import { User, IUserDocument } from "../models/User";
+import mongoose from "mongoose";
 
 const OTP_CODE = "9999";
 const OTP_TTL_MS = 5 * 60 * 1000; // 5 minutes
@@ -65,18 +66,29 @@ export const resendOtp: RequestHandler = async (req, res) => {
 
 export const getStars: RequestHandler = async (req, res) => {
   const { userId } = req.params;
-  // lookup either guestUuid or in uuids[]
-  const user = await User.findOne({
-    $or: [
-      { guestUuid: userId },
-      { uuids: userId },
-    ]
-  }) as IUserDocument | null;
+  let user: IUserDocument | null = null;
 
+  // 1) Try by MongoDB _id
+  if (mongoose.isValidObjectId(userId)) {
+    user = await User.findById(userId) as IUserDocument | null;
+  }
+
+  // 2) Fallback to guestUuid
+  if (!user) {
+    user = await User.findOne({ guestUuid: userId }) as IUserDocument | null;
+  }
+
+  // 3) Fallback to OTP‐issued UUIDs
+  if (!user) {
+    user = await User.findOne({ uuids: userId }) as IUserDocument | null;
+  }
+
+  // If still not found, bail out
   if (!user) {
      res.status(404).json({ error: 'User not found' });
   }
 
+  // Success
    res.json({ stars: user!.stars });
 };
 export const guest: RequestHandler = async (req, res) => {
