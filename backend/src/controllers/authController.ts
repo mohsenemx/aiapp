@@ -16,7 +16,16 @@ export const sendOtp: RequestHandler = async (req, res) => {
   const expiresAt = new Date(Date.now() + OTP_TTL_MS);
   await User.findOneAndUpdate(
     { phone },
-    { otp: OTP_CODE, otpExpiresAt: expiresAt },
+    {
+      $set: {
+        otp: OTP_CODE,
+        otpExpiresAt: expiresAt,
+      },
+      $setOnInsert: {
+        stars: 250,
+        uuids: [],
+      },
+    },
     { upsert: true, new: true }
   );
 
@@ -71,3 +80,13 @@ export const resendOtp: RequestHandler = async (req, res) => {
   res.json({ success: true, expiresIn: OTP_TTL_MS / 1000 });
   // no return of res.* value here
 };
+
+export const getStars: RequestHandler = async (req, res) => {
+  const { userId } = req.params;
+  // find the user whose uuids array contains this client UUID
+  const user = await User.findOne({ uuids: userId }) as IUserDocument | null;
+  if (!user) {
+     res.status(404).json({ error: 'User not found' });
+  }
+  res.json({ stars: user!.stars });
+}

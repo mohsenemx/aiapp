@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'widgets/app_drawer.dart';
 import 'widgets/message_input.dart';
 import 'services/api_service.dart';
+import 'package:intl/intl.dart';
 import 'chat_page.dart';
-import 'main.dart'; // for isDarkNotifier
+import 'main.dart';
 import 'models/message.dart';
 
 class HomePage extends StatefulWidget {
@@ -63,11 +64,32 @@ class _HomePageState extends State<HomePage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      setState(() async {
+        stars = await ApiService.instance.getStars();
+      });
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       drawer: AppDrawer(userId: widget.userId),
       appBar: AppBar(
-        title: const Text('چت‌بات من'),
+        title: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(width: 5),
+              Text(NumberFormat.decimalPattern('fa').format(stars)),
+              const SizedBox(width: 5),
+              const Icon(Icons.star),
+            ],
+          ),
+        ),
         centerTitle: true,
         actions: [
           ValueListenableBuilder<bool>(
@@ -86,7 +108,7 @@ class _HomePageState extends State<HomePage> {
             const Spacer(),
             const Center(
               child: Text(
-                'سلام! پیام خود را تایپ کنید تا چت جدید ساخته شود',
+                'سلام! روز بخیر.',
                 style: TextStyle(fontSize: 20),
                 textAlign: TextAlign.center,
               ),

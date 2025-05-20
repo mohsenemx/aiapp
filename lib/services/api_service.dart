@@ -147,4 +147,15 @@ class ApiService {
     }
     throw Exception('Failed to resend OTP');
   }
+
+  Future<int> getStars() async {
+    final uid = currentUserId;
+    if (uid == null) throw Exception('No userId stored');
+    final res = await _get('/users/$uid/stars');
+    if (res.statusCode == 200) {
+      final data = jsonDecode(res.body);
+      return data['stars'] as int;
+    }
+    throw Exception('Failed to fetch stars');
+  }
 }

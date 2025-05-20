@@ -3,6 +3,7 @@ import 'splash_screen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'services/api_service.dart';
 
+int stars = 250;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
@@ -11,7 +12,6 @@ void main() async {
 }
 
 final isDarkNotifier = ValueNotifier<bool>(true);
-int stars = 100;
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});

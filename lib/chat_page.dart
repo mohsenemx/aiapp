@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'main.dart';
 import 'widgets/app_drawer.dart';
 import 'widgets/message_input.dart';
+import 'widgets/typing_indicator.dart';
 import 'services/api_service.dart';
 import 'models/message.dart';
 import 'models/chat.dart';
@@ -36,6 +37,9 @@ class _ChatPageState extends State<ChatPage> {
 
   Future<void> _loadMessages() async {
     setState(() => _loading = true);
+    setState(() async {
+      stars = await ApiService.instance.getStars();
+    });
     final msgs = await ApiService.instance.getMessages(widget.chat.id);
     setState(() {
       _messages = msgs;
@@ -54,7 +58,6 @@ class _ChatPageState extends State<ChatPage> {
 
       // then ask the AI
       _fetchAiReply(widget.pendingUserText!);
-      ;
     } else {
       _loadMessages();
     }
@@ -171,8 +174,26 @@ class _ChatPageState extends State<ChatPage> {
               Expanded(
                 child: ListView.builder(
                   controller: _scrollController,
-                  itemCount: _messages.length,
+                  itemCount: _messages.length + (_sending ? 1 : 0),
                   itemBuilder: (_, i) {
+                    // if sending and this is the extra slot, show typing
+                    if (_sending && i == _messages.length) {
+                      return Align(
+                        alignment: Alignment.centerLeft,
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(
+                            vertical: 4,
+                            horizontal: 8,
+                          ),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.secondary,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: const TypingIndicator(), // our three-dot anim
+                        ),
+                      );
+                    }
                     final m = _messages[i];
                     return Align(
                       alignment:

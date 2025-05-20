@@ -1,5 +1,6 @@
 // lib/login_page.dart
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -52,6 +53,7 @@ class _LoginPageState extends State<LoginPage> {
         _otpExpires = expiresIn;
       });
       _startResendTimer();
+      sleep(Duration(seconds: 1));
     } catch (e) {
       setState(() {
         _error = 'ارسال کد با خطا مواجه شد';
