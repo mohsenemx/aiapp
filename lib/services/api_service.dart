@@ -158,17 +158,13 @@ class ApiService {
   Future<int> getStars() async {
     final uid = currentUserId;
     if (uid == null) throw Exception('No userId stored');
-    try {
-      final res = await _get('/users/$uid/stars');
-      if (res.statusCode == 200) {
-        final data = jsonDecode(res.body);
-        return data['stars'] as int;
-      }
-      throw Exception('Failed to fetch stars');
-    } catch (e) {
-      print('Something went really wrong, didnt fetch stars.');
-      return 0;
+    final res = await _get('/users/$uid/stars');
+    if (res.statusCode == 200) {
+      final data = jsonDecode(res.body);
+      return data['stars'] as int;
     }
+    print(res.body);
+    throw Exception('Failed to fetch stars');
   }
 
   Future<String> _registerGuest(String uuid) async {
