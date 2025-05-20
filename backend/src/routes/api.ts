@@ -2,7 +2,6 @@ import express from "express";
 import Chat from "../models/Chat";
 import Message from "../models/Message";
 import { openai } from "../utils/openai";
-// ① Do a *named* import of just the functions:
 import {
   resendOtp,
   sendOtp,
@@ -10,6 +9,7 @@ import {
   getStars,
   guest,
 } from "../controllers/authController";
+import { User } from "../models/User";
 
 const router = express.Router();
 
@@ -42,24 +42,52 @@ router.delete("/chats/:id", async (req, res) => {
   res.sendStatus(200);
 });
 
-// ── MESSAGES ──────────────────────────────────────────
 router.get("/messages/:chatId", async (req, res) => {
   const messages = await Message.find({ chatId: req.params.chatId });
   res.json(messages);
 });
 router.post("/messages", async (req, res) => {
   const { userId, chatId, text } = req.body;
+  let user = await User.findById(userId);
+  const starsNeeded = text.trim().split(/\s+/).length * 2;
+
+  if (!user) {
+  res.status(404).json({ error: 'User not found' });
+  }
+
+  if (user!.stars < starsNeeded) {
+  res.status(400).json({ error: 'Not enough stars' });
+  }
+  await User.findByIdAndUpdate(userId, {
+    $inc: { stars: -starsNeeded },
+  });
+
   const userMsg = await Message.create({ userId, chatId, text, isUser: true });
+
+  // Get full message history for this chat
+  const messages = await Message.find({ chatId }).sort({ createdAt: 1 });
+
+  // Convert to OpenAI format
+  const formattedMessages = messages.map(m => ({
+    role: m.isUser ? "user" : "assistant",
+    content: m.text
+  }));
+
+  // Ask OpenAI
   const aiRes = await openai.chat.completions.create({
     model: "gpt-3.5-turbo",
-    messages: [{ role: "user", content: text }],
+    messages: formattedMessages as unknown as any[],
   });
+
+  // Save AI response
+  const aiText = aiRes.choices[0].message?.content || "Error";
   const aiMsg = await Message.create({
     userId,
     chatId,
-    text: aiRes.choices[0].message?.content || "Error",
+    text: aiText,
     isUser: false,
   });
+  
   res.json([userMsg, aiMsg]);
 });
 

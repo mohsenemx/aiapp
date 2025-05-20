@@ -43,6 +43,10 @@ class _ChatPageState extends State<ChatPage> {
       _loading = false;
     });
     _scrollToBottom();
+    await _fetchStars();
+  }
+
+  Future<void> _fetchStars() async {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final fetched = await ApiService.instance.getStars();
       // now update state synchronously
@@ -92,6 +96,7 @@ class _ChatPageState extends State<ChatPage> {
       setState(() {
         _messages.add(aiMsg);
       });
+      await _fetchStars();
       _scrollToBottom();
     } catch (e) {
       // handle error
