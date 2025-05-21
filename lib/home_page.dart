@@ -1,9 +1,11 @@
 // lib/home_page.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'widgets/app_drawer.dart';
 import 'widgets/message_input.dart';
 import 'services/api_service.dart';
 import 'package:intl/intl.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'chat_page.dart';
 import 'main.dart';
 import 'models/message.dart';
@@ -53,6 +55,7 @@ class _HomePageState extends State<HomePage> {
                 chat: chat,
                 initialMessages: [userMsg],
                 pendingUserText: text,
+                toggleTheme: widget.toggleTheme,
               ),
         ),
       );
@@ -61,6 +64,21 @@ class _HomePageState extends State<HomePage> {
     } finally {
       setState(() => _sending = false);
     }
+  }
+
+  void _createNewChat() async {
+    final newChat = await ApiService.instance.createChat('چت جدید');
+    Navigator.of(context).pop();
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder:
+            (_) => ChatPage(
+              userId: widget.userId,
+              chat: newChat,
+              toggleTheme: widget.toggleTheme,
+            ),
+      ),
+    );
   }
 
   @override
@@ -79,47 +97,72 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: AppDrawer(userId: widget.userId),
+      drawer: AppDrawer(userId: widget.userId, toggleTheme: widget.toggleTheme),
       appBar: AppBar(
+        leading: Builder(
+          builder:
+              (context) => Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: IconButton(
+                  icon: Icon(FontAwesomeIcons.bars),
+                  onPressed: () => Scaffold.of(context).openDrawer(),
+                ),
+              ),
+        ),
         title: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
+          child: Column(
             children: [
-              const SizedBox(width: 5),
-              Text(NumberFormat.decimalPattern('fa').format(stars)),
-              const SizedBox(width: 5),
-              const Icon(Icons.star),
+              SizedBox(height: 10),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(width: 5),
+                  Text(NumberFormat.decimalPattern('fa').format(stars)),
+                  const SizedBox(width: 5),
+                  const Icon(Icons.star),
+                ],
+              ),
             ],
           ),
         ),
+
         centerTitle: true,
+        backgroundColor: Colors.transparent,
         actions: [
-          ValueListenableBuilder<bool>(
+          Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: IconButton(
+              onPressed: _createNewChat,
+              icon: Icon(FontAwesomeIcons.penToSquare),
+            ),
+          ),
+          /*ValueListenableBuilder<bool>(
             valueListenable: isDarkNotifier,
             builder:
                 (_, isDark, __) => IconButton(
-                  icon: Icon(isDark ? Icons.brightness_2 : Icons.wb_sunny),
+                  icon: Icon(
+                    isDark ? FontAwesomeIcons.moon : FontAwesomeIcons.sun,
+                  ),
                   onPressed: widget.toggleTheme,
                 ),
-          ),
+          ),*/
         ],
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            const Spacer(),
-            const Center(
-              child: Text(
-                'سلام! روز بخیر.',
-                style: TextStyle(fontSize: 20),
-                textAlign: TextAlign.center,
-              ),
+      body: Column(
+        children: [
+          const Spacer(),
+          const Center(
+            child: Text(
+              'سلام! روز بخیر.',
+              style: TextStyle(fontSize: 20),
+              textAlign: TextAlign.center,
             ),
-            const Spacer(),
-          ],
-        ),
+          ),
+          const Spacer(),
+        ],
       ),
+
       bottomNavigationBar: AbsorbPointer(
         absorbing: _sending,
         child: MessageInput(

@@ -1,14 +1,19 @@
 // lib/widgets/app_drawer.dart
 
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:arabic_numbers/arabic_numbers.dart';
 import '../models/chat.dart';
 import '../services/api_service.dart';
 import '../chat_page.dart';
 import '../login_page.dart';
+import '../main.dart';
 
 class AppDrawer extends StatefulWidget {
   final String userId;
-  const AppDrawer({Key? key, required this.userId}) : super(key: key);
+  final VoidCallback toggleTheme;
+  const AppDrawer({Key? key, required this.userId, required this.toggleTheme})
+    : super(key: key);
 
   @override
   State<AppDrawer> createState() => _AppDrawerState();
@@ -43,7 +48,12 @@ class _AppDrawerState extends State<AppDrawer> {
     Navigator.of(context).pop();
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => ChatPage(userId: widget.userId, chat: newChat),
+        builder:
+            (_) => ChatPage(
+              userId: widget.userId,
+              chat: newChat,
+              toggleTheme: widget.toggleTheme,
+            ),
       ),
     );
   }
@@ -119,104 +129,124 @@ class _AppDrawerState extends State<AppDrawer> {
   @override
   Widget build(BuildContext context) {
     return Drawer(
-      child: SafeArea(
-        child: Column(
-          children: [
-            const ListTile(
-              title: Text(
-                'چت‌ها',
-                style: TextStyle(fontWeight: FontWeight.bold),
+      child: Column(
+        children: [
+          const ListTile(
+            title: Text('چت‌ها', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+          if (_loading)
+            const Expanded(child: Center(child: CircularProgressIndicator())),
+          if (!_loading)
+            Expanded(
+              child: ListView.builder(
+                itemCount: _chats.length + 1,
+                itemBuilder: (ctx, idx) {
+                  if (idx == _chats.length) {
+                    return ListTile(
+                      leading: const Icon(Icons.add_circle_outline),
+                      title: const Text('چت جدید'),
+                      onTap: _createNewChat,
+                    );
+                  }
+                  final c = _chats[idx];
+                  return ListTile(
+                    leading: const Icon(Icons.chat_bubble_outline),
+                    title: Text(c.name),
+                    trailing: PopupMenuButton<String>(
+                      icon: const Icon(Icons.more_vert),
+                      onSelected: (v) {
+                        if (v == 'rename') _renameChat(idx);
+                        if (v == 'delete') _deleteChat(idx);
+                      },
+                      itemBuilder:
+                          (_) => const [
+                            PopupMenuItem(
+                              value: 'rename',
+                              child: Text('تغییر نام'),
+                            ),
+                            PopupMenuItem(value: 'delete', child: Text('حذف')),
+                          ],
+                    ),
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder:
+                              (_) => ChatPage(
+                                userId: widget.userId,
+                                chat: c,
+                                toggleTheme: widget.toggleTheme,
+                              ),
+                        ),
+                      );
+                    },
+                  );
+                },
               ),
             ),
-            if (_loading)
-              const Expanded(child: Center(child: CircularProgressIndicator())),
-            if (!_loading)
-              Expanded(
-                child: ListView.builder(
-                  itemCount: _chats.length + 1,
-                  itemBuilder: (ctx, idx) {
-                    if (idx == _chats.length) {
-                      return ListTile(
-                        leading: const Icon(Icons.add_circle_outline),
-                        title: const Text('چت جدید'),
-                        onTap: _createNewChat,
-                      );
-                    }
-                    final c = _chats[idx];
-                    return ListTile(
-                      leading: const Icon(Icons.chat_bubble_outline),
-                      title: Text(c.name),
-                      trailing: PopupMenuButton<String>(
-                        icon: const Icon(Icons.more_vert),
-                        onSelected: (v) {
-                          if (v == 'rename') _renameChat(idx);
-                          if (v == 'delete') _deleteChat(idx);
-                        },
-                        itemBuilder:
-                            (_) => const [
-                              PopupMenuItem(
-                                value: 'rename',
-                                child: Text('تغییر نام'),
-                              ),
-                              PopupMenuItem(
-                                value: 'delete',
-                                child: Text('حذف'),
-                              ),
-                            ],
+          const Divider(),
+
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ApiService.instance.isLoggedIn
+                  ? SizedBox(
+                    width: 200,
+                    child: ListTile(
+                      leading: const Icon(Icons.phone_android),
+                      title: Text(
+                        ArabicNumbers().convert(
+                          ApiService.instance.phoneNumber!,
+                        ),
                       ),
                       onTap: () {
-                        Navigator.of(context).pop();
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder:
-                                (_) => ChatPage(userId: widget.userId, chat: c),
-                          ),
+                        showDialog(
+                          context: context,
+                          builder:
+                              (ctx) => AlertDialog(
+                                title: const Text('خروج'),
+                                content: const Text('آیا مطمئن به خروج هستید؟'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx),
+                                    child: const Text('خیر'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      ApiService.instance.logout();
+                                      Navigator.pop(ctx); // close dialog
+                                      Navigator.pop(context); // close drawer
+                                      setState(() {}); // rebuild drawer
+                                    },
+                                    child: const Text('بله'),
+                                  ),
+                                ],
+                              ),
                         );
                       },
-                    );
-                  },
+                    ),
+                  )
+                  : ListTile(
+                    leading: const Icon(Icons.login),
+                    title: const Text('ورود / ثبت‌نام'),
+                    onTap: _goToLogin,
+                  ),
+              Padding(
+                padding: const EdgeInsets.all(5.0),
+                child: ValueListenableBuilder<bool>(
+                  valueListenable: isDarkNotifier,
+                  builder:
+                      (_, isDark, __) => IconButton(
+                        icon: Icon(
+                          isDark ? FontAwesomeIcons.moon : Icons.sunny,
+                        ),
+                        onPressed: widget.toggleTheme,
+                      ),
                 ),
               ),
-            const Divider(),
-
-            ApiService.instance.isLoggedIn
-                ? ListTile(
-                  leading: const Icon(Icons.phone_android),
-                  title: Text(ApiService.instance.phoneNumber!),
-                  onTap: () {
-                    // optionally log out:
-                    showDialog(
-                      context: context,
-                      builder:
-                          (ctx) => AlertDialog(
-                            title: const Text('خروج'),
-                            content: const Text('آیا مطمئن به خروج هستید؟'),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(ctx),
-                                child: const Text('خیر'),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  ApiService.instance.logout();
-                                  Navigator.pop(ctx); // close dialog
-                                  Navigator.pop(context); // close drawer
-                                  setState(() {}); // rebuild drawer
-                                },
-                                child: const Text('بله'),
-                              ),
-                            ],
-                          ),
-                    );
-                  },
-                )
-                : ListTile(
-                  leading: const Icon(Icons.login),
-                  title: const Text('ورود / ثبت‌نام'),
-                  onTap: _goToLogin,
-                ),
-          ],
-        ),
+            ],
+          ),
+        ],
       ),
     );
   }

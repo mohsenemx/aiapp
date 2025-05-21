@@ -8,6 +8,7 @@ import 'widgets/app_drawer.dart';
 import 'widgets/message_input.dart';
 import 'widgets/typing_indicator.dart';
 import 'services/api_service.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'models/message.dart';
 import 'models/chat.dart';
 
@@ -16,12 +17,14 @@ class ChatPage extends StatefulWidget {
   final Chat chat;
   final List<Message>? initialMessages;
   final String? pendingUserText;
+  final VoidCallback toggleTheme;
   const ChatPage({
     Key? key,
     required this.userId,
     required this.chat,
     this.initialMessages,
     this.pendingUserText,
+    required this.toggleTheme,
   }) : super(key: key);
 
   @override
@@ -44,6 +47,21 @@ class _ChatPageState extends State<ChatPage> {
       _loading = false;
     });
     _scrollToBottom();
+  }
+
+  void _createNewChat() async {
+    final newChat = await ApiService.instance.createChat('چت جدید');
+    Navigator.of(context).pop();
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder:
+            (_) => ChatPage(
+              userId: widget.userId,
+              chat: newChat,
+              toggleTheme: widget.toggleTheme,
+            ),
+      ),
+    );
   }
 
   Future<void> _fetchStars() async {
@@ -144,8 +162,19 @@ class _ChatPageState extends State<ChatPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: AppDrawer(userId: widget.userId),
+      drawer: AppDrawer(userId: widget.userId, toggleTheme: widget.toggleTheme),
+
       appBar: AppBar(
+        leading: Builder(
+          builder:
+              (context) => Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: IconButton(
+                  icon: Icon(FontAwesomeIcons.bars),
+                  onPressed: () => Scaffold.of(context).openDrawer(),
+                ),
+              ),
+        ),
         title: Container(
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
@@ -153,63 +182,46 @@ class _ChatPageState extends State<ChatPage> {
           ),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
+            child: Column(
               children: [
-                const SizedBox(width: 5),
-                Text(NumberFormat.decimalPattern('fa').format(stars)),
-                const SizedBox(width: 5),
-                const Icon(Icons.star),
+                SizedBox(height: 10),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(width: 5),
+                    Text(NumberFormat.decimalPattern('fa').format(stars)),
+                    const SizedBox(width: 5),
+                    const Icon(Icons.star),
+                  ],
+                ),
               ],
             ),
           ),
         ),
         centerTitle: true,
         actions: [
-          ValueListenableBuilder<bool>(
-            valueListenable: isDarkNotifier,
-            builder:
-                (_, isDark, __) => IconButton(
-                  icon: Icon(isDark ? Icons.brightness_2 : Icons.wb_sunny),
-                  onPressed: () => isDarkNotifier.value = !isDarkNotifier.value,
-                ),
+          Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: IconButton(
+              onPressed: _createNewChat,
+              icon: Icon(FontAwesomeIcons.penToSquare),
+            ),
           ),
         ],
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            if (_loading) const LinearProgressIndicator(),
-            if (!_loading)
-              Expanded(
-                child: ListView.builder(
-                  controller: _scrollController,
-                  itemCount: _messages.length + (_sending ? 1 : 0),
-                  itemBuilder: (_, i) {
-                    // if sending and this is the extra slot, show typing
-                    if (_sending && i == _messages.length) {
-                      return Align(
-                        alignment: Alignment.centerLeft,
-                        child: Container(
-                          margin: const EdgeInsets.symmetric(
-                            vertical: 4,
-                            horizontal: 8,
-                          ),
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.secondary,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: const TypingIndicator(), // our three-dot anim
-                        ),
-                      );
-                    }
-                    final m = _messages[i];
+      body: Column(
+        children: [
+          if (_loading) const LinearProgressIndicator(),
+          if (!_loading)
+            Expanded(
+              child: ListView.builder(
+                controller: _scrollController,
+                itemCount: _messages.length + (_sending ? 1 : 0),
+                itemBuilder: (_, i) {
+                  // if sending and this is the extra slot, show typing
+                  if (_sending && i == _messages.length) {
                     return Align(
-                      alignment:
-                          m.isUser
-                              ? Alignment.centerRight
-                              : Alignment.centerLeft,
+                      alignment: Alignment.centerLeft,
                       child: Container(
                         margin: const EdgeInsets.symmetric(
                           vertical: 4,
@@ -217,23 +229,40 @@ class _ChatPageState extends State<ChatPage> {
                         ),
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color:
-                              m.isUser
-                                  ? Theme.of(context).colorScheme.primary
-                                  : Theme.of(context).colorScheme.secondary,
+                          color: Theme.of(context).colorScheme.secondary,
                           borderRadius: BorderRadius.circular(16),
                         ),
-                        child: Text(
-                          m.text,
-                          style: const TextStyle(color: Colors.white),
-                        ),
+                        child: const TypingIndicator(), // our three-dot anim
                       ),
                     );
-                  },
-                ),
+                  }
+                  final m = _messages[i];
+                  return Align(
+                    alignment:
+                        m.isUser ? Alignment.centerRight : Alignment.centerLeft,
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(
+                        vertical: 4,
+                        horizontal: 8,
+                      ),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color:
+                            m.isUser
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.secondary,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Text(
+                        m.text,
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  );
+                },
               ),
-          ],
-        ),
+            ),
+        ],
       ),
       bottomNavigationBar: MessageInput(
         hintText: 'متنی بنویسید....',

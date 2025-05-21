@@ -7,7 +7,6 @@ int stars = 250;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
-  await ApiService.instance.init();
   runApp(const MyApp());
 }
 
@@ -38,6 +37,7 @@ class _MyAppState extends State<MyApp> {
           theme: ThemeData(
             fontFamily: 'Vazir',
             useMaterial3: true,
+
             colorScheme:
                 isDark
                     ? ColorScheme.dark(
