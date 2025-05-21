@@ -38,18 +38,17 @@ class _ChatPageState extends State<ChatPage> {
   Future<void> _loadMessages() async {
     setState(() => _loading = true);
     final msgs = await ApiService.instance.getMessages(widget.chat.id);
+    _fetchStars();
     setState(() {
       _messages = msgs;
       _loading = false;
     });
     _scrollToBottom();
-    await _fetchStars();
   }
 
   Future<void> _fetchStars() async {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final fetched = await ApiService.instance.getStars();
-      // now update state synchronously
       if (!mounted) return;
       setState(() {
         stars = fetched;
@@ -65,8 +64,8 @@ class _ChatPageState extends State<ChatPage> {
       _loading = false;
       _scrollToBottom();
 
-      // then ask the AI
       _fetchAiReply(widget.pendingUserText!);
+      _fetchStars();
     } else {
       _loadMessages();
     }
@@ -95,8 +94,9 @@ class _ChatPageState extends State<ChatPage> {
       final aiMsg = result[1]; // only the AI bubble
       setState(() {
         _messages.add(aiMsg);
+        _fetchStars();
       });
-      await _fetchStars();
+
       _scrollToBottom();
     } catch (e) {
       // handle error
@@ -123,7 +123,6 @@ class _ChatPageState extends State<ChatPage> {
     _tc.clear();
     _scrollToBottom();
 
-    // 2) call API for AI reply
     try {
       final results = await ApiService.instance.sendMessage(
         chatId: widget.chat.id,
@@ -134,6 +133,7 @@ class _ChatPageState extends State<ChatPage> {
         _messages.add(results[1]);
         _sending = false;
       });
+      _fetchStars();
       _scrollToBottom();
     } catch (e) {
       // handle error: you might want to show a toast or add an error bubble
