@@ -11,7 +11,7 @@ class ApiService {
   ApiService._privateCtor();
   static final ApiService instance = ApiService._privateCtor();
 
-  final String _baseUrl = 'http://194.145.119.252:3001/api';
+  final String _baseUrl = 'http://m.bahushbot.ir:3001/api';
 
   Box? _settingsBox;
   Future<void> init() async {

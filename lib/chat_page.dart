@@ -80,6 +80,10 @@ class _ChatPageState extends State<ChatPage> {
     if (widget.initialMessages != null) {
       _messages = widget.initialMessages!;
       _loading = false;
+
+      setState(() {
+        _sending = true;
+      });
       _scrollToBottom();
 
       _fetchAiReply(widget.pendingUserText!);
@@ -112,6 +116,7 @@ class _ChatPageState extends State<ChatPage> {
       final aiMsg = result[1]; // only the AI bubble
       setState(() {
         _messages.add(aiMsg);
+        _sending = false;
         _fetchStars();
       });
 
@@ -218,7 +223,6 @@ class _ChatPageState extends State<ChatPage> {
                 controller: _scrollController,
                 itemCount: _messages.length + (_sending ? 1 : 0),
                 itemBuilder: (_, i) {
-                  // if sending and this is the extra slot, show typing
                   if (_sending && i == _messages.length) {
                     return Align(
                       alignment: Alignment.centerLeft,
@@ -232,7 +236,7 @@ class _ChatPageState extends State<ChatPage> {
                           color: Theme.of(context).colorScheme.secondary,
                           borderRadius: BorderRadius.circular(16),
                         ),
-                        child: const TypingIndicator(), // our three-dot anim
+                        child: const TypingIndicator(),
                       ),
                     );
                   }

@@ -7,6 +7,7 @@ int stars = 250;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
+  await ApiService.instance.init();
   runApp(const MyApp());
 }
 

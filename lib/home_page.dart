@@ -1,6 +1,7 @@
 // lib/home_page.dart
+// ignore_for_file: avoid_print
+
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'widgets/app_drawer.dart';
 import 'widgets/message_input.dart';
 import 'services/api_service.dart';
@@ -28,13 +29,13 @@ class _HomePageState extends State<HomePage> {
   Future<void> _sendFromHome() async {
     final text = _homeTC.text.trim();
     if (text.isEmpty) return;
-
-    setState(() => _sending = true);
+    setState(() {
+      _sending = true;
+    });
     try {
-      // 1) Create a new chat on the backend
       final chat = await ApiService.instance.createChat('چت جدید');
       final userMsg = Message(
-        id: '', // temporary
+        id: '',
         chatId: chat.id,
         userId: widget.userId,
         text: text,
@@ -42,10 +43,8 @@ class _HomePageState extends State<HomePage> {
         createdAt: DateTime.now(),
       );
 
-      // 2) Clear input and reset sending state
       _homeTC.clear();
 
-      // 3) Navigate instantly, passing the initial user message
       if (!mounted) return;
       Navigator.of(context).push(
         MaterialPageRoute(
@@ -60,7 +59,7 @@ class _HomePageState extends State<HomePage> {
         ),
       );
     } catch (e) {
-      // TODO: show error toast/snackbar
+      print(e);
     } finally {
       setState(() => _sending = false);
     }
@@ -169,6 +168,7 @@ class _HomePageState extends State<HomePage> {
           controller: _homeTC,
           onSend: _sendFromHome,
           hintText: _sending ? 'در حال ارسال…' : 'هرچی میخوایی بپرس...',
+          enabled: !_sending,
         ),
       ),
     );

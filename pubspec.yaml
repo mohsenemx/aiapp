@@ -42,6 +42,7 @@ dependencies:
   uuid: ^4.4.2
   font_awesome_flutter:
   arabic_numbers: ^1.0.0
+  flutter_launcher_icons: ^0.14.3
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -63,6 +64,8 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+  assets:
+    - assets/images/icon.png
   fonts:
     - family: Vazir
       fonts:
