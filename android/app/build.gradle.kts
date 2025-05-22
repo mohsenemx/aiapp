@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.aiapp"
+    namespace = "com.bahushbot.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "29.0.13113456"
 
