@@ -2,6 +2,9 @@ import express from "express";
 import Chat from "../models/Chat";
 import Message from "../models/Message";
 import { openai } from "../utils/openai";
+import multer from "multer";
+import fs from "fs";
+import path from "path";
 import {
   resendOtp,
   sendOtp,
@@ -12,7 +15,7 @@ import {
 import { User } from "../models/User";
 
 const router = express.Router();
-
+const upload = multer({ dest: "uploads/" });
 // ── AUTH ──────────────────────────────────────────────
 // Use `router.post` so `sendOtp` / `verifyOtp` are treated as RequestHandlers
 router.post("/auth/send-otp", sendOtp);
@@ -52,11 +55,11 @@ router.post("/messages", async (req, res) => {
   const starsNeeded = text.trim().split(/\s+/).length * 2;
 
   if (!user) {
-  res.status(404).json({ error: 'User not found' });
+    res.status(404).json({ error: "User not found" });
   }
 
   if (user!.stars < starsNeeded) {
-  res.status(400).json({ error: 'Not enough stars' });
+    res.status(400).json({ error: "Not enough stars" });
   }
   await User.findByIdAndUpdate(userId, {
     $inc: { stars: -starsNeeded },
@@ -68,9 +71,9 @@ router.post("/messages", async (req, res) => {
   const messages = await Message.find({ chatId }).sort({ createdAt: 1 });
 
   // Convert to OpenAI format
-  const formattedMessages = messages.map(m => ({
+  const formattedMessages = messages.map((m) => ({
     role: m.isUser ? "user" : "assistant",
-    content: m.text
+    content: m.text,
   }));
 
   // Ask OpenAI
@@ -87,8 +90,48 @@ router.post("/messages", async (req, res) => {
     text: aiText,
     isUser: false,
   });
-  
+
   res.json([userMsg, aiMsg]);
+});
+
+router.post("/vision", upload.single("image"), async (req, res) => {
+  const text = req.body.text;
+  const imagePath = req.file?.path;
+
+  if (!text || !imagePath) {
+    res.status(400).json({ error: "Text and image are required" });
+    return;
+  }
+
+  try {
+    const imageData = fs.readFileSync(imagePath, { encoding: "base64" });
+    const base64Image = `data:image/jpeg;base64,${imageData}`;
+
+    const result = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text },
+            {
+              type: "image_url",
+              image_url: { url: base64Image },
+            },
+          ],
+        },
+      ],
+      max_tokens: 1000,
+    });
+
+    fs.unlinkSync(imagePath); // Delete file after use
+
+    const responseText = result.choices[0]?.message?.content || "No response";
+    res.json({ response: responseText });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to process image and text" });
+  }
 });
 
 export default router;
