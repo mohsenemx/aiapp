@@ -110,22 +110,39 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Future<void> _fetchAiReply({required String text, XFile? file}) async {
-    // show a loading indicator if you like
     try {
-      final result = await ApiService.instance.sendMessage(
-        chatId: widget.chat.id,
-        text: text,
-      );
-      final aiMsg = result[1]; // only the AI bubble
-      setState(() {
-        _messages.add(aiMsg);
-        _sending = false;
-        _fetchStars();
-      });
+      if (file != null) {
+        final result = await ApiService.instance.sendVision(
+          image: file,
+          text: text,
+          chatId: widget.chat.id,
+        );
 
+        final userMsg = Message.fromJson(result['userMsg']);
+        final aiMsg = Message.fromJson(result['aiMsg']);
+
+        setState(() {
+          _messages.add(userMsg);
+          _messages.add(aiMsg);
+          _sending = false;
+        });
+      } else {
+        final result = await ApiService.instance.sendMessage(
+          chatId: widget.chat.id,
+          text: text,
+        );
+        final aiMsg = result[1];
+        setState(() {
+          _messages.add(aiMsg);
+          _sending = false;
+        });
+      }
+
+      _fetchStars();
       _scrollToBottom();
     } catch (e) {
-      // handle error
+      setState(() => _sending = false);
+      // handle error if needed
     }
   }
 
