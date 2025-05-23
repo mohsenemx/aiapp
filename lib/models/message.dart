@@ -3,6 +3,7 @@ class Message {
   final String chatId;
   final String userId;
   final String text;
+  final String? image;
   final bool isUser;
   final DateTime createdAt;
 
@@ -11,6 +12,7 @@ class Message {
     required this.chatId,
     required this.userId,
     required this.text,
+    this.image,
     required this.isUser,
     required this.createdAt,
   });
@@ -20,6 +22,7 @@ class Message {
     chatId: j['chatId'] as String,
     userId: j['userId'] as String,
     text: j['text'] as String,
+    image: j['image'] as String?,
     isUser: j['isUser'] as bool,
     createdAt: DateTime.parse(j['createdAt'] as String),
   );

@@ -7,6 +7,7 @@ import 'widgets/message_input.dart';
 import 'services/api_service.dart';
 import 'package:intl/intl.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:image_picker/image_picker.dart';
 import 'chat_page.dart';
 import 'main.dart';
 import 'models/message.dart';
@@ -26,7 +27,7 @@ class _HomePageState extends State<HomePage> {
   final TextEditingController _homeTC = TextEditingController();
   bool _sending = false;
 
-  Future<void> _sendFromHome() async {
+  Future<void> _sendFromHome({required String text, XFile? file}) async {
     final text = _homeTC.text.trim();
     if (text.isEmpty) return;
     setState(() {
@@ -166,7 +167,7 @@ class _HomePageState extends State<HomePage> {
         absorbing: _sending,
         child: MessageInput(
           controller: _homeTC,
-          onSend: _sendFromHome,
+          onSend: (text, file) => _sendFromHome(text: text, file: file),
           hintText: _sending ? 'در حال ارسال…' : 'هرچی میخوایی بپرس...',
           enabled: !_sending,
         ),

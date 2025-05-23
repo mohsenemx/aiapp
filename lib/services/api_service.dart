@@ -2,6 +2,7 @@
 
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:uuid/uuid.dart';
 import '../models/chat.dart';
@@ -175,5 +176,55 @@ class ApiService {
     }
     print(res.body);
     throw Exception('Failed to register guest');
+  }
+
+  /// Sends [text], [chatId], [image] and the current userId to `/vision`.
+  /// Throws if the image is > 10 MB.
+  /// Returns the decoded JSON `{ userMsg, aiMsg }`.
+  Future<Map<String, dynamic>> sendVision({
+    required XFile image,
+    required String text,
+    required String chatId,
+  }) async {
+    final uid = currentUserId;
+    if (uid == null) throw Exception('No userId stored');
+
+    // 1️⃣ Check file size
+    final fileSize = await image.length(); // bytes
+    const maxBytes = 10 * 1024 * 1024; // 10 MB
+    if (fileSize > maxBytes) {
+      throw Exception(
+        'Image too large (${(fileSize / 1024 / 1024).toStringAsFixed(1)} MB), max is 10 MB',
+      );
+    }
+
+    final uri = Uri.parse('$_baseUrl/vision');
+
+    // 2️⃣ Build multipart request
+    final request =
+        http.MultipartRequest('POST', uri)
+          ..fields['text'] = text
+          ..fields['chatId'] = chatId
+          ..fields['userId'] = uid
+          ..files.add(
+            await http.MultipartFile.fromPath(
+              'image',
+              image.path,
+              // you can set contentType if you want:
+              // contentType: MediaType('image', 'jpeg'),
+            ),
+          );
+
+    // 3️⃣ Send & parse
+    final streamed = await request.send();
+    final res = await http.Response.fromStream(streamed);
+
+    if (res.statusCode == 200) {
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+      // data['userMsg'] and data['aiMsg'] will be the saved objects
+      return data;
+    } else {
+      throw Exception('Vision API failed: ${res.statusCode} ${res.body}');
+    }
   }
 }

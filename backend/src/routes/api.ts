@@ -15,7 +15,10 @@ import {
 import { User } from "../models/User";
 
 const router = express.Router();
-const upload = multer({ dest: "uploads/" });
+router.use("/uploads", express.static(path.resolve(__dirname, "../uploads")));
+
+// Configure multer to store uploads in uploads/ folder
+const upload = multer({ dest: path.resolve(__dirname, "../uploads") });
 // ── AUTH ──────────────────────────────────────────────
 // Use `router.post` so `sendOtp` / `verifyOtp` are treated as RequestHandlers
 router.post("/auth/send-otp", sendOtp);
@@ -94,44 +97,67 @@ router.post("/messages", async (req, res) => {
   res.json([userMsg, aiMsg]);
 });
 
-router.post("/vision", upload.single("image"), async (req, res) => {
-  const text = req.body.text;
-  const imagePath = req.file?.path;
+router.post(
+  "/vision",
+  upload.single("image"),
+  async (req, res): Promise<void> => {
+    const { text, chatId, userId } = req.body;
+    const file = req.file;
 
-  if (!text || !imagePath) {
-    res.status(400).json({ error: "Text and image are required" });
-    return;
+    if (!text || !file || !chatId || !userId) {
+      res
+        .status(400)
+        .json({ error: "text, chatId, userId, and image are required" });
+      return;
+    }
+
+    try {
+      const imageUrl = `https://m.bahushbot.ir/api/uploads/${file.filename}`;
+      // 1️⃣ Save the user's message with the image path
+      const userMsg = await Message.create({
+        chatId,
+        userId,
+        text,
+        image: imageUrl,
+        isUser: true,
+      });
+
+      // 2️⃣ Prepare base64-encoded image for OpenAI
+      const imageData = fs.readFileSync(file.path, { encoding: "base64" });
+      const base64Image = `data:image/jpeg;base64,${imageData}`;
+
+      // 3️⃣ Call GPT-4 with vision
+      const result = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "text", text },
+              { type: "image_url", image_url: { url: base64Image } },
+            ],
+          },
+        ],
+        max_tokens: 1000,
+      });
+
+      // 4️⃣ Extract AI response text
+      const aiText = result.choices[0]?.message?.content || "No response";
+
+      // 5️⃣ Save AI’s response (no image)
+      const aiMsg = await Message.create({
+        chatId,
+        userId: "AI", // or whatever you use for the assistant
+        text: aiText,
+        isUser: false,
+      });
+
+      // 6️⃣ Return both messages
+      res.json({ userMsg, aiMsg });
+    } catch (error: any) {
+      console.error(error);
+      res.status(500).json({ error: "Failed to process image and text" });
+    }
   }
-
-  try {
-    const imageData = fs.readFileSync(imagePath, { encoding: "base64" });
-    const base64Image = `data:image/jpeg;base64,${imageData}`;
-
-    const result = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "user",
-          content: [
-            { type: "text", text },
-            {
-              type: "image_url",
-              image_url: { url: base64Image },
-            },
-          ],
-        },
-      ],
-      max_tokens: 1000,
-    });
-
-    fs.unlinkSync(imagePath); // Delete file after use
-
-    const responseText = result.choices[0]?.message?.content || "No response";
-    res.json({ response: responseText });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Failed to process image and text" });
-  }
-});
-
+);
 export default router;

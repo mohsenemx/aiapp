@@ -7,7 +7,7 @@ import '../main.dart';
 
 class MessageInput extends StatefulWidget {
   final TextEditingController controller;
-  final VoidCallback onSend;
+  final void Function(String text, XFile? image) onSend;
   final String hintText;
   final bool enabled;
   const MessageInput({
@@ -235,7 +235,10 @@ class _MessageInputState extends State<MessageInput> {
                                             setState(() {
                                               pointsNeeded = 0;
                                             });
-                                            widget.onSend();
+                                            widget.onSend(
+                                              widget.controller.text.trim(),
+                                              _pickedImage,
+                                            );
                                           },
                                         )
                                         : Padding(
