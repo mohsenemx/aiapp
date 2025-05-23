@@ -55,6 +55,7 @@ class _HomePageState extends State<HomePage> {
                 chat: chat,
                 initialMessages: [userMsg],
                 pendingUserText: text,
+                image: file,
                 toggleTheme: widget.toggleTheme,
               ),
         ),

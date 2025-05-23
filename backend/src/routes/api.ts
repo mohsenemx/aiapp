@@ -110,7 +110,15 @@ router.post(
         .json({ error: "text, chatId, userId, and image are required" });
       return;
     }
+    let user = await User.findById(userId);
+    const starsNeeded = 50;
 
+    if (user!.stars < starsNeeded) {
+      res.status(400).json({ error: "Not enough stars" });
+    }
+    await User.findByIdAndUpdate(userId, {
+      $inc: { stars: -starsNeeded },
+    });
     try {
       const imageUrl = `https://m.bahushbot.ir:3001/api/uploads/${file.filename}`;
       // 1️⃣ Save the user's message with the image path
