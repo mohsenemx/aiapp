@@ -235,10 +235,12 @@ class _MessageInputState extends State<MessageInput> {
                                             setState(() {
                                               pointsNeeded = 0;
                                             });
+
                                             widget.onSend(
                                               widget.controller.text.trim(),
                                               _pickedImage,
                                             );
+                                            _clearImage();
                                           },
                                         )
                                         : Padding(

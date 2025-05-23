@@ -40,7 +40,7 @@ export const sendOtp: RequestHandler = async (req, res) => {
     { phone },
     {
       $set: { otp: code, otpExpiresAt: expiresAt },
-      $setOnInsert: { stars: 250, uuids: [], guestUuid: undefined },
+      $setOnInsert: { stars: 1000, uuids: [], guestUuid: undefined },
     },
     { upsert: true, new: true }
   );
@@ -143,7 +143,7 @@ export const guest: RequestHandler = async (req, res) => {
     // Create new guest user
     user = new User({
       guestUuid: uuid,
-      stars: 250,
+      stars: 1000,
       uuids: [], // OTP logins go here later
     });
     await user.save();

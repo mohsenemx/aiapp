@@ -121,7 +121,7 @@ router.post(
         image: imageUrl,
         isUser: true,
       });
-
+      await userMsg.save();
       // 2️⃣ Prepare base64-encoded image for OpenAI
       const imageData = fs.readFileSync(file.path, { encoding: "base64" });
       const base64Image = `data:image/jpeg;base64,${imageData}`;
@@ -151,7 +151,7 @@ router.post(
         text: aiText,
         isUser: false,
       });
-
+      await aiMsg.save();
       // 6️⃣ Return both messages
       res.json({ userMsg, aiMsg });
     } catch (error: any) {
