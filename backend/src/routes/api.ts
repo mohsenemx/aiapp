@@ -112,7 +112,7 @@ router.post(
     }
 
     try {
-      const imageUrl = `https://m.bahushbot.ir/api/uploads/${file.filename}`;
+      const imageUrl = `https://m.bahushbot.ir:3001/api/uploads/${file.filename}`;
       // 1️⃣ Save the user's message with the image path
       const userMsg = await Message.create({
         chatId,
@@ -121,7 +121,6 @@ router.post(
         image: imageUrl,
         isUser: true,
       });
-      await userMsg.save();
       // 2️⃣ Prepare base64-encoded image for OpenAI
       const imageData = fs.readFileSync(file.path, { encoding: "base64" });
       const base64Image = `data:image/jpeg;base64,${imageData}`;
@@ -151,7 +150,6 @@ router.post(
         text: aiText,
         isUser: false,
       });
-      await aiMsg.save();
       // 6️⃣ Return both messages
       res.json({ userMsg, aiMsg });
     } catch (error: any) {

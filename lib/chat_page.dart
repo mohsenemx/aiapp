@@ -290,9 +290,25 @@ class _ChatPageState extends State<ChatPage> {
                                 : Theme.of(context).colorScheme.secondary,
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: Text(
-                        m.text,
-                        style: const TextStyle(color: Colors.white),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (m.image != null) ...[
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.network(
+                                m.image!,
+                                width: 200,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                          ],
+                          Text(
+                            m.text,
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                        ],
                       ),
                     ),
                   );
