@@ -15,23 +15,27 @@ class ApiService {
   final String _baseUrl = 'https://m.bahushbot.ir:3001/api';
 
   Box? _settingsBox;
+
+  /// Initialize Hive and register guest if no UUID stored yet
   Future<void> init() async {
     _settingsBox = await Hive.openBox('settings');
 
-    if (currentUserId != null) return;
+    if (currentUuid != null) return;
     final guestUuid = const Uuid().v4();
-    final serverUserId = await _registerGuest(guestUuid);
+    final serverUuid = await _registerGuest(guestUuid);
 
-    await _settingsBox?.put('userId', serverUserId);
+    await _settingsBox?.put('userId', serverUuid);
   }
 
-  String? get currentUserId => _settingsBox?.get('userId') as String?;
-  String? get phoneNumber => _settingsBox?.get('phone') as String?;
-  bool get isLoggedIn => currentUserId != null && phoneNumber != null;
+  /// Stored UUID (called userId in Hive for backward compatibility)
+  String? get currentUuid => _settingsBox?.get('userId') as String?;
 
-  Future<void> _saveLogin(String phone, String userId) async {
+  String? get phoneNumber => _settingsBox?.get('phone') as String?;
+  bool get isLoggedIn => currentUuid != null && phoneNumber != null;
+
+  Future<void> _saveLogin(String phone, String uuid) async {
     await _settingsBox?.put('phone', phone);
-    await _settingsBox?.put('userId', userId);
+    await _settingsBox?.put('userId', uuid);
   }
 
   Future<http.Response> _get(String path) =>
@@ -64,19 +68,18 @@ class ApiService {
     throw Exception('Failed to send OTP');
   }
 
-  /// Verify [otp] for [phone], store userId+phone in Hive on success.
+  /// Verify [otp] for [phone], store uuid+phone on success.
   Future<String> verifyOtp(String phone, String otp) async {
     final res = await _post('/auth/verify-otp', {'phone': phone, 'otp': otp});
     if (res.statusCode == 200) {
       final data = jsonDecode(res.body);
-      final userId = data['userId'] as String;
-      await _saveLogin(phone, userId);
-      return userId;
+      final uuid = data['userId'] as String;
+      await _saveLogin(phone, uuid);
+      return uuid;
     }
     throw Exception('OTP verification failed');
   }
 
-  /// Log out the user locally
   Future<void> logout() async {
     await _settingsBox?.delete('phone');
     await _settingsBox?.delete('userId');
@@ -85,9 +88,9 @@ class ApiService {
   // ── CHATS & MESSAGES ─────────────────────────────────
 
   Future<List<Chat>> getChats() async {
-    final uid = currentUserId;
-    if (uid == null) throw Exception('No userId stored');
-    final res = await _get('/chats/$uid');
+    final uuid = currentUuid;
+    if (uuid == null) throw Exception('No user UUID stored');
+    final res = await _get('/chats/$uuid');
     if (res.statusCode == 200) {
       final List data = jsonDecode(res.body);
       return data.map((j) => Chat.fromJson(j)).toList();
@@ -96,10 +99,10 @@ class ApiService {
   }
 
   Future<Chat> createChat(String name) async {
-    final uid = currentUserId;
-    if (uid == null) throw Exception('No userId stored');
+    final uuid = currentUuid;
+    if (uuid == null) throw Exception('No user UUID stored');
 
-    final res = await _post('/chats', {'userId': uid, 'name': name});
+    final res = await _post('/chats', {'userId': uuid, 'name': name});
     if (res.statusCode == 200 || res.statusCode == 201) {
       return Chat.fromJson(jsonDecode(res.body));
     }
@@ -133,10 +136,10 @@ class ApiService {
     required String chatId,
     required String text,
   }) async {
-    final uid = currentUserId;
-    if (uid == null) throw Exception('No userId stored');
+    final uuid = currentUuid;
+    if (uuid == null) throw Exception('No user UUID stored');
     final res = await _post('/messages', {
-      'userId': uid,
+      'userId': uuid,
       'chatId': chatId,
       'text': text,
     });
@@ -157,14 +160,13 @@ class ApiService {
   }
 
   Future<int> getStars() async {
-    final uid = currentUserId;
-    if (uid == null) throw Exception('No userId stored');
-    final res = await _get('/users/$uid/stars');
+    final uuid = currentUuid;
+    if (uuid == null) throw Exception('No user UUID stored');
+    final res = await _get('/users/$uuid/stars');
     if (res.statusCode == 200) {
       final data = jsonDecode(res.body);
       return data['stars'] as int;
     }
-    print(res.body);
     throw Exception('Failed to fetch stars');
   }
 
@@ -172,57 +174,42 @@ class ApiService {
     final res = await _post('/auth/guest', {'uuid': uuid});
     if (res.statusCode == 200 || res.statusCode == 201) {
       final data = jsonDecode(res.body);
-      return data['userId'];
+      return data['userId'] as String;
     }
-    print(res.body);
     throw Exception('Failed to register guest');
   }
 
-  /// Sends [text], [chatId], [image] and the current userId to `/vision`.
-  /// Throws if the image is > 10 MB.
-  /// Returns the decoded JSON `{ userMsg, aiMsg }`.
+  /// Sends text, chatId, image & userId to `/vision`. Returns `{ userMsg, aiMsg }`.
   Future<Map<String, dynamic>> sendVision({
     required XFile image,
     required String text,
     required String chatId,
   }) async {
-    final uid = currentUserId;
-    if (uid == null) throw Exception('No userId stored');
+    final uuid = currentUuid;
+    if (uuid == null) throw Exception('No user UUID stored');
 
-    // 1️⃣ Check file size
-    final fileSize = await image.length(); // bytes
-    const maxBytes = 10 * 1024 * 1024; // 10 MB
-    if (fileSize > maxBytes) {
+    // check image size <=10MB
+    final size = await image.length();
+    const maxBytes = 10 * 1024 * 1024;
+    if (size > maxBytes) {
       throw Exception(
-        'Image too large (${(fileSize / 1024 / 1024).toStringAsFixed(1)} MB), max is 10 MB',
+        'Image too large (${(size / 1024 / 1024).toStringAsFixed(1)}MB), max 10MB',
       );
     }
 
     final uri = Uri.parse('$_baseUrl/vision');
-
-    // 2️⃣ Build multipart request
     final request =
         http.MultipartRequest('POST', uri)
           ..fields['text'] = text
           ..fields['chatId'] = chatId
-          ..fields['userId'] = uid
-          ..files.add(
-            await http.MultipartFile.fromPath(
-              'image',
-              image.path,
-              // you can set contentType if you want:
-              // contentType: MediaType('image', 'jpeg'),
-            ),
-          );
+          ..fields['userId'] = uuid
+          ..files.add(await http.MultipartFile.fromPath('image', image.path));
 
-    // 3️⃣ Send & parse
     final streamed = await request.send();
     final res = await http.Response.fromStream(streamed);
 
     if (res.statusCode == 200) {
-      final data = jsonDecode(res.body) as Map<String, dynamic>;
-      // data['userMsg'] and data['aiMsg'] will be the saved objects
-      return data;
+      return jsonDecode(res.body) as Map<String, dynamic>;
     } else {
       throw Exception('Vision API failed: ${res.statusCode} ${res.body}');
     }

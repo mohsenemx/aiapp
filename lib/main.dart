@@ -56,7 +56,7 @@ class _MyAppState extends State<MyApp> {
           debugShowCheckedModeBanner: false,
           home: SplashScreen(
             toggleTheme: toggleTheme,
-            userId: ApiService.instance.currentUserId ?? '',
+            userId: ApiService.instance.currentUuid ?? '',
           ),
           builder: (context, child) {
             return Directionality(
