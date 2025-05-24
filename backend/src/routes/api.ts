@@ -2,6 +2,7 @@ import express from "express";
 import Chat from "../models/Chat";
 import Message from "../models/Message";
 import { openai } from "../utils/openai";
+import ImageGeneration from "../models/ImageGeneration";
 import multer from "multer";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
@@ -119,7 +120,7 @@ router.post(
     }
 
     const user = await User.findOne({ uuid: userId });
-    const starsNeeded = 50;
+    const starsNeeded = 100;
     if (!user) {
       res.status(404).json({ error: "User not found" });
       return;
@@ -187,14 +188,16 @@ router.post("/images/generate", async (req, res): Promise<void> => {
     return;
   }
 
-  const starsNeeded = 250;
+  const starsNeeded = 300;
   const user = await User.findOne({ uuid: userId });
   if (!user) {
     res.status(404).json({ error: "User not found" });
     return;
   }
-  if (user.stars < starsNeeded)
+  if (user.stars < starsNeeded) {
     res.status(400).json({ error: "Not enough stars" });
+    return;
+  }
 
   await User.findOneAndUpdate(
     { uuid: userId },
@@ -235,6 +238,14 @@ router.post("/images/generate", async (req, res): Promise<void> => {
       userId: "AI",
       image: localUrl,
       isUser: false,
+    });
+
+    // store in ImageGeneration collection
+    await ImageGeneration.create({
+      prompt,
+      url: localUrl,
+      userId,
+      createdAt: new Date(),
     });
 
     res.json({ userMsg, aiMsg });
