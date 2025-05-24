@@ -166,4 +166,69 @@ router.post(
     }
   }
 );
+
+/**
+ * POST /images/generate
+ * Body: { prompt: string, size?: string, chatId: string, userId: string }
+ * Generates an image, deducts stars, and stores messages in the chat
+ * Returns: { userMsg, aiMsg }
+ */
+router.post(
+  "/images/generate",
+  async (req: express.Request, res: express.Response): Promise<void> => {
+    const { prompt, size = "512x512", chatId, userId } = req.body;
+
+    if (!prompt || typeof prompt !== "string" || !chatId || !userId) {
+      res.status(400).json({ error: `prompt, chatId and userId are required` });
+      return;
+    }
+
+    const starsNeeded = 250;
+    const user = await User.findById(userId);
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+    if (user.stars < starsNeeded) {
+      res.status(400).json({ error: "Not enough stars" });
+      return;
+    }
+
+    // Deduct stars
+    await User.findByIdAndUpdate(userId, { $inc: { stars: -starsNeeded } });
+
+    try {
+      // 1️⃣ Save user's prompt as a message
+      const userMsg = await Message.create({
+        chatId,
+        userId,
+        text: prompt,
+        isUser: true,
+      });
+
+      // 2️⃣ Generate image
+      const response = await openai.images.generate({ prompt, n: 1, size });
+      const imageUrl = response.data?.[0]?.url;
+      if (!imageUrl) throw new Error("No image URL returned");
+
+      // 3️⃣ Save AI message with image URL
+      const aiMsg = await Message.create({
+        chatId,
+        userId: "AI",
+        text: "", // no text, image only
+        image: imageUrl,
+        isUser: false,
+      });
+
+      // 4️⃣ Return both saved messages
+      res.json({ userMsg, aiMsg });
+    } catch (error: any) {
+      console.error("Error generating image:", error);
+      res
+        .status(500)
+        .json({ error: "Failed to generate image", details: error.message });
+    }
+  }
+);
+
 export default router;
