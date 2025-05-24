@@ -208,7 +208,7 @@ router.post("/images/generate", async (req, res): Promise<void> => {
     });
 
     const response = await openai.images.generate({
-      model: "stability.sd3-large-v1:0",
+      model: "dall-e-3",
       prompt,
       n: 1,
       size,
