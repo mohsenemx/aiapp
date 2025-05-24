@@ -3,6 +3,8 @@ import Chat from "../models/Chat";
 import Message from "../models/Message";
 import { openai } from "../utils/openai";
 import multer from "multer";
+import axios from "axios";
+import { v4 as uuidv4 } from "uuid";
 import fs from "fs";
 import path from "path";
 import {
@@ -134,7 +136,7 @@ router.post(
     );
 
     try {
-      const imageUrl = `https://m.bahushbot.ir/api/uploads/${file.filename}`;
+      const imageUrl = `https://m.bahushbot.ir:3001/api/uploads/${file.filename}`;
       const userMsg = await Message.create({
         chatId,
         userId,
@@ -213,14 +215,25 @@ router.post("/images/generate", async (req, res): Promise<void> => {
       n: 1,
       size,
     });
-    const imageUrl = response.data![0]?.url;
-    if (!imageUrl) throw new Error("No image URL returned");
+    const externalUrl = response.data![0]?.url;
+    if (!externalUrl) throw new Error("No image URL returned");
 
+    // download it
+    const imageResp = await axios.get<ArrayBuffer>(externalUrl, {
+      responseType: "arraybuffer",
+    });
+    // choose a unique filename
+    const ext = (externalUrl.split(".").pop() || "png").split("?")[0];
+    const filename = `${uuidv4()}.${ext}`;
+    const filepath = path.resolve(__dirname, "../uploads", filename);
+    fs.writeFileSync(filepath, Buffer.from(imageResp.data));
+
+    // build your local URL and store it
+    const localUrl = `https://m.bahushbot.ir:3001/api/uploads/${filename}`;
     const aiMsg = await Message.create({
       chatId,
       userId: "AI",
-      text: "",
-      image: imageUrl,
+      image: localUrl,
       isUser: false,
     });
 
