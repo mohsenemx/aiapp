@@ -11,7 +11,8 @@ const MessageSchema = new mongoose.Schema({
   },
   text: {
     type: String,
-    required: true,
+    required: false,
+    default: "",
   },
   isUser: {
     type: Boolean,
