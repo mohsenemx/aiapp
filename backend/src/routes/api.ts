@@ -195,7 +195,10 @@ router.post(
     }
 
     // Deduct stars
-    await User.findByIdAndUpdate(userId, { $inc: { stars: -starsNeeded } });
+    await User.findOneAndUpdate(
+      { guestUuid: userId },
+      { $inc: { stars: -starsNeeded } }
+    );
 
     try {
       // 1️⃣ Save user's prompt as a message
