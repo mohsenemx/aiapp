@@ -256,5 +256,35 @@ router.post("/images/generate", async (req, res): Promise<void> => {
       .json({ error: "Failed to generate image", details: err.message });
   }
 });
+/**
+ * GET /images/user/:userId
+ * Returns all ImageGeneration records for the given user UUID
+ */
+router.get(
+  "/images/user/:userId",
+  async (req: express.Request, res: express.Response): Promise<void> => {
+    const { userId } = req.params;
+
+    // make sure user exists
+    const user = await User.findOne({ uuid: userId });
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    try {
+      // fetch all image generations for this user, newest first
+      const images = await ImageGeneration.find({ userId }).sort({
+        createdAt: -1,
+      });
+      res.json(images);
+    } catch (err: any) {
+      console.error("Error fetching image generations:", err);
+      res
+        .status(500)
+        .json({ error: "Failed to load images", details: err.message });
+    }
+  }
+);
 
 export default router;
