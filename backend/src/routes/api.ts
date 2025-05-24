@@ -206,9 +206,14 @@ router.post(
         isUser: true,
       });
 
-      // 2️⃣ Generate image
-      const response = await openai.images.generate({ prompt, n: 1, size });
-      const imageUrl = response.data?.[0]?.url;
+      // 2️⃣ Generate image using specific model
+      const response = await openai.images.generate({
+        model: "stability.sd3-large-v1:0",
+        prompt,
+        n: 1,
+        size,
+      });
+      const imageUrl = response.data![0]?.url ?? "";
       if (!imageUrl) throw new Error("No image URL returned");
 
       // 3️⃣ Save AI message with image URL
