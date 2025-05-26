@@ -236,7 +236,6 @@ class ApiService {
   /// Returns the ImageGeneration record (parsed from the AI message)
   Future<ImageGeneration> sendImageGeneration({
     required String prompt,
-    String negativePrompt = '',
     String size = '1024x1024',
   }) async {
     final uuid = currentUuid;
@@ -244,7 +243,6 @@ class ApiService {
 
     final res = await _post('/images/generate', {
       'prompt': prompt,
-      'negativePrompt': negativePrompt,
       'userId': uuid,
       'size': size,
     });
@@ -261,7 +259,6 @@ class ApiService {
 
     return ImageGeneration(
       prompt: prompt,
-      negativePrompt: negativePrompt,
       url: imageUrl,
       userId: uuid,
       createdAt: createdAt,

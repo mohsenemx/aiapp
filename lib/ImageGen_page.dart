@@ -22,7 +22,6 @@ class ImageGenerationPage extends StatefulWidget {
 
 class _ImageGenerationPageState extends State<ImageGenerationPage> {
   final TextEditingController _promptController = TextEditingController();
-  final TextEditingController _negativeController = TextEditingController();
   bool _loading = false;
   List<ImageGeneration> _history = [];
 
@@ -50,14 +49,10 @@ class _ImageGenerationPageState extends State<ImageGenerationPage> {
     setState(() => _loading = true);
     try {
       // this assumes you added a method sendImageGeneration in ApiService:
-      final gen = await ApiService.instance.sendImageGeneration(
-        prompt: prompt,
-        negativePrompt: _negativeController.text.trim(),
-      );
+      final gen = await ApiService.instance.sendImageGeneration(prompt: prompt);
       setState(() {
         _history.insert(0, gen);
         _promptController.clear();
-        _negativeController.clear();
       });
     } catch (e) {
       // TODO: show error snack
@@ -102,21 +97,11 @@ class _ImageGenerationPageState extends State<ImageGenerationPage> {
                   minLines: 1,
                   maxLines: 3,
                 ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _negativeController,
-                  decoration: InputDecoration(
-                    labelText: 'Negative prompt (optional)',
-                    border: OutlineInputBorder(),
-                  ),
-                  minLines: 1,
-                  maxLines: 2,
-                ),
                 const SizedBox(height: 12),
                 ElevatedButton.icon(
                   onPressed: _loading ? null : _generate,
                   icon: const Icon(Icons.image),
-                  label: const Text('Generate Image'),
+                  label: const Text('ساخت تصویر'),
                 ),
               ],
             ),
@@ -158,16 +143,6 @@ class _ImageGenerationPageState extends State<ImageGenerationPage> {
                                 gen.prompt,
                                 style: TextStyle(fontWeight: FontWeight.bold),
                               ),
-                              if (gen.negativePrompt.isNotEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 4),
-                                  child: Text(
-                                    'Avoid: ${gen.negativePrompt}',
-                                    style: TextStyle(
-                                      fontStyle: FontStyle.italic,
-                                    ),
-                                  ),
-                                ),
                               const SizedBox(height: 6),
                               Text(
                                 DateFormat.yMMMd(
@@ -196,7 +171,6 @@ class _ImageGenerationPageState extends State<ImageGenerationPage> {
   @override
   void dispose() {
     _promptController.dispose();
-    _negativeController.dispose();
     super.dispose();
   }
 }

@@ -5,11 +5,6 @@ const ImageGenerationSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  negativePrompt: {
-    type: String,
-    required: false,
-    default: "",
-  },
   url: {
     type: String,
     required: true, // the local URL where the image is served

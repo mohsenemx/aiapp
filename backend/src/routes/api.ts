@@ -181,13 +181,7 @@ router.post(
 
 // ── IMAGE GENERATION ───────────────────────────────────
 router.post("/images/generate", async (req, res): Promise<void> => {
-  const {
-    prompt,
-    size = "1024x1024",
-    chatId,
-    userId,
-    negativePrompt,
-  } = req.body;
+  const { prompt, size = "1024x1024", chatId, userId } = req.body;
 
   if (!prompt || !chatId || !userId) {
     res.status(400).json({ error: "prompt, chatId and userId are required" });
@@ -211,13 +205,6 @@ router.post("/images/generate", async (req, res): Promise<void> => {
   );
 
   try {
-    const userMsg = await Message.create({
-      chatId,
-      userId,
-      text: prompt,
-      isUser: true,
-    });
-
     const response = await openai.images.generate({
       model: "dall-e-3",
       prompt,
@@ -246,7 +233,6 @@ router.post("/images/generate", async (req, res): Promise<void> => {
       prompt,
       url: localUrl,
       userId,
-      negativePrompt: negativePrompt,
       createdAt: new Date(),
     });
 
