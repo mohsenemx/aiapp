@@ -1,5 +1,6 @@
 // lib/widgets/app_drawer.dart
 
+import 'package:aiapp/ImageGen_page.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:arabic_numbers/arabic_numbers.dart';
@@ -191,6 +192,10 @@ class _AppDrawerState extends State<AppDrawer> {
                   },
                 ),
               ),
+            ImageGenerationPage(
+              userId: ApiService.instance.currentUuid!,
+              toggleTheme: widget.toggleTheme,
+            ),
             const Divider(),
 
             Row(

@@ -7,6 +7,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:uuid/uuid.dart';
 import '../models/chat.dart';
 import '../models/message.dart';
+import '../models/ImageGen.dart';
 
 class ApiService {
   ApiService._privateCtor();
@@ -213,5 +214,57 @@ class ApiService {
     } else {
       throw Exception('Vision API failed: ${res.statusCode} ${res.body}');
     }
+  }
+
+  /// Fetches all image generations for the current user.
+  Future<List<ImageGeneration>> getUserImages() async {
+    final uuid = currentUuid;
+    if (uuid == null) throw Exception('No user UUID stored');
+
+    final res = await _get('/images/user/$uuid');
+    if (res.statusCode == 200) {
+      final List data = jsonDecode(res.body);
+      return data
+          .map((j) => ImageGeneration.fromJson(j as Map<String, dynamic>))
+          .toList();
+    } else {
+      throw Exception('Failed to load images: ${res.statusCode} ${res.body}');
+    }
+  }
+
+  /// Generates an image by calling POST /images/generate
+  /// Returns the ImageGeneration record (parsed from the AI message)
+  Future<ImageGeneration> sendImageGeneration({
+    required String prompt,
+    String negativePrompt = '',
+    String size = '1024x1024',
+  }) async {
+    final uuid = currentUuid;
+    if (uuid == null) throw Exception('No user UUID stored');
+
+    final res = await _post('/images/generate', {
+      'prompt': prompt,
+      'negativePrompt': negativePrompt,
+      'userId': uuid,
+      'size': size,
+    });
+
+    if (res.statusCode != 200) {
+      throw Exception('Image generation failed: ${res.statusCode} ${res.body}');
+    }
+
+    final Map<String, dynamic> data = jsonDecode(res.body);
+    // we expect { userMsg, aiMsg }
+    final aiMsg = data['aiMsg'] as Map<String, dynamic>;
+    final imageUrl = aiMsg['image'] as String;
+    final createdAt = DateTime.parse(aiMsg['createdAt'] as String);
+
+    return ImageGeneration(
+      prompt: prompt,
+      negativePrompt: negativePrompt,
+      url: imageUrl,
+      userId: uuid,
+      createdAt: createdAt,
+    );
   }
 }

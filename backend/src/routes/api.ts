@@ -181,7 +181,13 @@ router.post(
 
 // ── IMAGE GENERATION ───────────────────────────────────
 router.post("/images/generate", async (req, res): Promise<void> => {
-  const { prompt, size = "1024x1024", chatId, userId } = req.body;
+  const {
+    prompt,
+    size = "1024x1024",
+    chatId,
+    userId,
+    negativePrompt,
+  } = req.body;
 
   if (!prompt || !chatId || !userId) {
     res.status(400).json({ error: "prompt, chatId and userId are required" });
@@ -217,6 +223,7 @@ router.post("/images/generate", async (req, res): Promise<void> => {
       prompt,
       n: 1,
       size,
+      moderation: "low",
     });
     const externalUrl = response.data![0]?.url;
     if (!externalUrl) throw new Error("No image URL returned");
