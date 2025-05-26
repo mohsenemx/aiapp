@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema<IUserDocument>({
   uuid: { type: String, unique: true, required: true },
   otp: { type: String },
   otpExpiresAt: { type: Date },
-  stars: { type: Number, default: 250 },
+  stars: { type: Number, default: 1000 },
 });
 
 // instance method to issue a new client UUID

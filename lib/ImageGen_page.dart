@@ -8,6 +8,7 @@ import 'package:dio/dio.dart';
 import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
 import 'dart:typed_data';
 import 'main.dart';
+import 'widgets/ui_helper.dart';
 
 class ImageGenerationPage extends StatefulWidget {
   final String userId;
@@ -81,6 +82,7 @@ class _ImageGenerationPageState extends State<ImageGenerationPage> {
       });
     } catch (e) {
       // TODO: show error snack
+      showSnackBar(context, "به اندازه کافی ستاره ندارید", error: true);
     } finally {
       setState(() => _loading = false);
     }
