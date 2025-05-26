@@ -36,16 +36,16 @@ dependencies:
   cupertino_icons: ^1.0.8
   hive:
   hive_flutter:
-  intl: ^0.20.2
-  image_picker: ^1.0.7
-  http: ^0.13.5
-  uuid: ^4.4.2
+  intl:
+  image_picker:
+  http:
+  uuid:
   font_awesome_flutter:
-  arabic_numbers: ^1.0.0
-  flutter_launcher_icons: ^0.14.3
-  permission_handler: ^10.2.0
-  path_provider: ^2.0.15
-  image_gallery_saver_plus: ^4.0.1
+  arabic_numbers:
+  flutter_launcher_icons:
+  permission_handler:
+  path_provider:
+  image_gallery_saver_plus:
   dio:
 dev_dependencies:
   flutter_test:
