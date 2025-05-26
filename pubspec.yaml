@@ -43,6 +43,9 @@ dependencies:
   font_awesome_flutter:
   arabic_numbers: ^1.0.0
   flutter_launcher_icons: ^0.14.3
+  permission_handler: ^10.2.0
+  path_provider: ^2.0.15
+  gallery_saver: ^2.3.1
 dev_dependencies:
   flutter_test:
     sdk: flutter
