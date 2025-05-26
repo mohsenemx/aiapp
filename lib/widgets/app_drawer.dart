@@ -192,9 +192,29 @@ class _AppDrawerState extends State<AppDrawer> {
                   },
                 ),
               ),
-            ImageGenerationPage(
+            GestureDetector(
+              child: ListTile(
+                leading: Icon(Icons.image),
+                title: Text('تولید عکس'),
+              ),
+              onTap: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder:
+                        (_) => ImageGenerationPage(
+                          userId: ApiService.instance.currentUuid!,
+                          toggleTheme: widget.toggleTheme,
+                        ),
+                  ),
+                );
+                /* 
+                ImageGenerationPage(
               userId: ApiService.instance.currentUuid!,
               toggleTheme: widget.toggleTheme,
+            ),
+            */
+              },
             ),
             const Divider(),
 

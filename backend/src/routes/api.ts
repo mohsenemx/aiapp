@@ -240,22 +240,17 @@ router.post("/images/generate", async (req, res): Promise<void> => {
 
     // build your local URL and store it
     const localUrl = `https://m.bahushbot.ir:3001/api/uploads/${filename}`;
-    const aiMsg = await Message.create({
-      chatId,
-      userId: "AI",
-      image: localUrl,
-      isUser: false,
-    });
 
     // store in ImageGeneration collection
-    await ImageGeneration.create({
+    const generatedImage = await ImageGeneration.create({
       prompt,
       url: localUrl,
       userId,
+      negativePrompt: negativePrompt,
       createdAt: new Date(),
     });
 
-    res.json({ userMsg, aiMsg });
+    res.json({ generatedImage });
   } catch (err: any) {
     console.error("Error generating image:", err);
     res
