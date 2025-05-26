@@ -4,11 +4,9 @@ import 'package:intl/intl.dart';
 import 'widgets/app_drawer.dart';
 import 'services/api_service.dart';
 import 'models/ImageGen.dart';
-import 'dart:io';
-import 'package:http/http.dart' as http;
-import 'package:permission_handler/permission_handler.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:gallery_saver/gallery_saver.dart';
+import 'package:dio/dio.dart';
+import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
+import 'dart:typed_data';
 import 'main.dart';
 
 class ImageGenerationPage extends StatefulWidget {
@@ -37,49 +35,24 @@ class _ImageGenerationPageState extends State<ImageGenerationPage> {
   }
 
   Future<void> _downloadImage(ImageGeneration image) async {
-    // 1️⃣ Ask for storage/gallery permissions
-    final status = await Permission.storage.request();
-    if (!status.isGranted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Storage permission is required to save images.'),
-        ),
-      );
-      return;
-    }
-
     try {
-      // 2️⃣ Fetch the image bytes
-      final uri = Uri.parse(image.url);
-      final resp = await http.get(uri);
-      if (resp.statusCode != 200) {
-        throw Exception('Failed to download image');
-      }
+      final response = await Dio().get(
+        image.url,
+        options: Options(responseType: ResponseType.bytes),
+      );
 
-      // 3️⃣ Write to a temporary file
-      final bytes = resp.bodyBytes;
-      final dir = await getTemporaryDirectory();
-      final timestamp = DateTime.now().millisecondsSinceEpoch;
-      // infer extension from URL or default to .png
-      final ext = image.url.split('.').last.split('?').first;
-      final filename = 'IMG_$timestamp.$ext';
-      final filePath = '${dir.path}/$filename';
-      final file = File(filePath);
-      await file.writeAsBytes(bytes);
+      final Uint8List bytes = Uint8List.fromList(response.data);
+      final result = await ImageGallerySaverPlus.saveImage(
+        bytes,
+        quality: 100,
+        name: 'image_${DateTime.now().millisecondsSinceEpoch}',
+      );
 
-      // 4️⃣ Save to gallery
-      final success = await GallerySaver.saveImage(file.path);
-      if (success == true) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Image saved to gallery!')));
-      } else {
-        throw Exception('Gallery save failed');
-      }
+      print('Download result: $result');
+      // Optional: show success feedback
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error saving image: $e')));
+      print('Failed to download image: $e');
+      // Optional: show error feedback
     }
   }
 
