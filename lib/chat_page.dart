@@ -6,7 +6,6 @@ import 'package:intl/intl.dart';
 import 'main.dart';
 import 'widgets/app_drawer.dart';
 import 'widgets/message_input.dart';
-import 'widgets/typing_indicator.dart';
 import 'services/api_service.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';

@@ -250,13 +250,12 @@ class ApiService {
     if (res.statusCode != 200) {
       throw Exception('Image generation failed: ${res.statusCode} ${res.body}');
     }
-
+    print(res.body);
     final Map<String, dynamic> data = jsonDecode(res.body);
-    // we expect { userMsg, aiMsg }
-    final aiMsg = data['aiMsg'] as Map<String, dynamic>;
-    final imageUrl = aiMsg['image'] as String;
-    final createdAt = DateTime.parse(aiMsg['createdAt'] as String);
-
+    final imageUrl = data['generatedImage']['url'] as String;
+    final createdAt = DateTime.parse(
+      data['generatedImage']['createdAt'] as String,
+    );
     return ImageGeneration(
       prompt: prompt,
       url: imageUrl,

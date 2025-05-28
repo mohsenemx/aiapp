@@ -48,12 +48,11 @@ class _ImageGenerationPageState extends State<ImageGenerationPage> {
         quality: 100,
         name: 'image_${DateTime.now().millisecondsSinceEpoch}',
       );
-
-      print('Download result: $result');
-      // Optional: show success feedback
+      if (result['isSuccess']) {
+        showSnackBar(context, 'با موفقیت دانلود شد.');
+      }
     } catch (e) {
-      print('Failed to download image: $e');
-      // Optional: show error feedback
+      showSnackBar(context, 'مشکلی در ذخیره تصویر رخ داد', error: true);
     }
   }
 
