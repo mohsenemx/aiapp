@@ -127,17 +127,38 @@ class _ImageGenerationPageState extends State<ImageGenerationPage> {
                   maxLines: 3,
                 ),
                 const SizedBox(height: 12),
-                ElevatedButton.icon(
-                  style: ButtonStyle(
-                    backgroundColor: WidgetStatePropertyAll(
-                      Theme.of(context).colorScheme.primary,
+                SizedBox(
+                  child: ElevatedButton.icon(
+                    style: ButtonStyle(
+                      backgroundColor: WidgetStatePropertyAll(
+                        Theme.of(context).colorScheme.primary,
+                      ),
                     ),
-                  ),
-                  onPressed: _loading ? null : _generate,
-                  icon: const Icon(Icons.image, color: Colors.white),
-                  label: const Text(
-                    'ساخت تصویر',
-                    style: TextStyle(color: Colors.white),
+                    onPressed: _loading ? null : _generate,
+                    icon: const Icon(Icons.image, color: Colors.white),
+                    label: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        const Text(
+                          'ساخت تصویر',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.max,
+                          children: [
+                            Text(
+                              NumberFormat.decimalPattern('fa').format(300),
+                              style: TextStyle(color: Colors.white),
+                            ),
+                            Icon(Icons.star, color: Colors.white),
+                            Text('-', style: TextStyle(color: Colors.white)),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],

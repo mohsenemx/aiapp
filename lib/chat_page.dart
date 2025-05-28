@@ -12,6 +12,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'models/message.dart';
 import 'models/chat.dart';
+import 'widgets/chat_bubble.dart';
 
 class ChatPage extends StatefulWidget {
   final String userId;
@@ -273,61 +274,10 @@ class _ChatPageState extends State<ChatPage> {
                 controller: _scrollController,
                 itemCount: _messages.length + (_sending ? 1 : 0),
                 itemBuilder: (_, i) {
-                  if (_sending && i == _messages.length) {
-                    return Align(
-                      alignment: Alignment.centerLeft,
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(
-                          vertical: 4,
-                          horizontal: 8,
-                        ),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.secondary,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: const TypingIndicator(),
-                      ),
-                    );
-                  }
-                  final m = _messages[i];
-                  return Align(
-                    alignment:
-                        m.isUser ? Alignment.centerRight : Alignment.centerLeft,
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(
-                        vertical: 4,
-                        horizontal: 8,
-                      ),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color:
-                            m.isUser
-                                ? Theme.of(context).colorScheme.primary
-                                : Theme.of(context).colorScheme.secondary,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (m.image != null) ...[
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Image.network(
-                                m.image!,
-                                width: 200,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                          ],
-                          Text(
-                            m.text,
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                        ],
-                      ),
-                    ),
+                  return ChatBubble(
+                    sending: _sending,
+                    isLast: i == _messages.length,
+                    m: _messages[i],
                   );
                 },
               ),
