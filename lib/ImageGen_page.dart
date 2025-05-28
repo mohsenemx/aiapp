@@ -56,11 +56,22 @@ class _ImageGenerationPageState extends State<ImageGenerationPage> {
     }
   }
 
+  Future<void> _fetchStars() async {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final fetched = await ApiService.instance.getStars();
+      if (!mounted) return;
+      setState(() {
+        stars = fetched;
+      });
+    });
+  }
+
   Future<void> _loadHistory() async {
     setState(() => _loading = true);
     try {
       final images = await ApiService.instance.getUserImages();
       setState(() => _history = images);
+      _fetchStars();
     } catch (e) {
       // TODO: show error snack
     } finally {
