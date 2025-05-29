@@ -1,6 +1,7 @@
 // lib/chat_page.dart
 // ignore_for_file: unused_field
 
+import 'package:aiapp/widgets/typing_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'main.dart';
@@ -273,11 +274,27 @@ class _ChatPageState extends State<ChatPage> {
                 controller: _scrollController,
                 itemCount: _messages.length + (_sending ? 1 : 0),
                 itemBuilder: (_, i) {
-                  return ChatBubble(
-                    sending: _sending,
-                    isLast: i == _messages.length,
-                    m: _messages[i],
-                  );
+                  // 📤 if we’re in the “sending” placeholder slot, show your typing indicator
+                  if (_sending && i == _messages.length) {
+                    return Align(
+                      alignment: Alignment.centerLeft, // or right, as you like
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(
+                          vertical: 4,
+                          horizontal: 8,
+                        ),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.secondary,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const TypingIndicator(),
+                      ),
+                    );
+                  }
+                  // ✅ otherwise it’s a real message
+                  final m = _messages[i];
+                  return ChatBubble(m: m);
                 },
               ),
             ),
