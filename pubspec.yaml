@@ -47,6 +47,8 @@ dependencies:
   path_provider:
   image_gallery_saver_plus:
   dio:
+  #adivery: ^4.2.0
+  adivery_ads:
 dev_dependencies:
   flutter_test:
     sdk: flutter

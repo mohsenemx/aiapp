@@ -1,4 +1,6 @@
 // lib/image_generation_page.dart
+import 'package:adivery_ads/adivery.dart';
+import 'package:adivery_ads/adivery_ads.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'widgets/app_drawer.dart';
@@ -68,6 +70,8 @@ class _ImageGenerationPageState extends State<ImageGenerationPage> {
 
   Future<void> _loadHistory() async {
     setState(() => _loading = true);
+    AdiveryPlugin.prepareInterstitialAd('3579dc3f-caeb-4529-b84c-1fba41a1502a');
+    AdiveryPlugin.show('3579dc3f-caeb-4529-b84c-1fba41a1502a');
     try {
       final images = await ApiService.instance.getUserImages();
       setState(() => _history = images);
@@ -121,6 +125,16 @@ class _ImageGenerationPageState extends State<ImageGenerationPage> {
       ),
       body: Column(
         children: [
+          BannerAd(
+            '3579dc3f-caeb-4529-b84c-1fba41a1502a',
+            BannerAdSize.LARGE_BANNER,
+            onAdLoaded: (ad) {
+              print('Banner ad loaded');
+            },
+            onAdClicked: (ad) {
+              print('Banner ad clicked');
+            },
+          ),
           Padding(
             padding: const EdgeInsets.all(12),
             child: Column(

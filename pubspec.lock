@@ -14,6 +14,14 @@ packages:
     description: dart
     source: sdk
     version: "0.3.3"
+  adivery_ads:
+    dependency: "direct main"
+    description:
+      name: adivery_ads
+      sha256: "1307a080c77fa56bf21f2ed7098b9226b1fa24edde1bd5b8b2d84da8b873a464"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.5"
   analyzer:
     dependency: transitive
     description:
