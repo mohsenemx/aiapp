@@ -78,25 +78,6 @@ class _ImageGenerationPageState extends State<ImageGenerationPage> {
       showSnackBar(context, 'مشکلی در بازگذاری تصاویر پیش آمد', error: true);
     } finally {
       setState(() => _loading = false);
-      try {
-        final responseId = await TapsellPlus.instance.requestInterstitialAd(
-          '683872f36280794748a5d9f2',
-        );
-        TapsellPlus.instance.showInterstitialAd(
-          responseId,
-          onOpened: (map) {
-            // Ad opened - Map contains zone_id and response_id
-            print('Ad shows!');
-          },
-          onError: (map) {
-            // Ad failed to show - Map contains error_message, zone_id and response_id
-            print('Failed to show ads?');
-          },
-        );
-      } catch (e) {
-        print(e);
-        print('Failed to load ad');
-      }
     }
   }
 
@@ -104,6 +85,26 @@ class _ImageGenerationPageState extends State<ImageGenerationPage> {
     final prompt = _promptController.text.trim();
     if (prompt.isEmpty) return;
     setState(() => _loading = true);
+    showSnackBar(context, 'ساخت عکس بعد از تبلیغ کوتاهی شروع میشود.');
+    try {
+      final responseId = await TapsellPlus.instance.requestInterstitialAd(
+        '683872f36280794748a5d9f2',
+      );
+      TapsellPlus.instance.showInterstitialAd(
+        responseId,
+        onOpened: (map) {
+          // Ad opened - Map contains zone_id and response_id
+          print('Ad shows!');
+        },
+        onError: (map) {
+          // Ad failed to show - Map contains error_message, zone_id and response_id
+          print('Failed to show ads?');
+        },
+      );
+    } catch (e) {
+      print(e);
+      print('Failed to load ad');
+    }
     try {
       final gen = await ApiService.instance.sendImageGeneration(prompt: prompt);
       setState(() {
@@ -112,7 +113,6 @@ class _ImageGenerationPageState extends State<ImageGenerationPage> {
         _promptController.clear();
       });
     } catch (e) {
-      // TODO: show error snack
       showSnackBar(context, "به اندازه کافی ستاره ندارید", error: true);
     } finally {
       setState(() => _loading = false);
