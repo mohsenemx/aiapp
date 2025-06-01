@@ -1,21 +1,22 @@
-import 'package:adivery_ads/adivery.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'splash_screen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'services/api_service.dart';
-import 'package:adivery_ads/adivery_ads.dart';
+import 'package:tapsell_plus/tapsell_plus.dart';
 
-int stars = 250;
+int stars = 1000;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
   await ApiService.instance.init();
-  initializeDateFormatting();
-  AdiveryPlugin.setLoggingEnabled(true);
-  AdiveryPlugin.initialize('11d7f1ed-5804-44f6-837c-1c63bca9b870');
 
   runApp(const MyApp());
+  final appId =
+      "pbtnjdqsglrqpbtphbsgtjhfkpcooaircpdtjkgtctrjpsnfhhetseprlsrmbrnrjjjebt";
+  TapsellPlus.instance.initialize(appId);
+  TapsellPlus.instance.setDebugMode(LogLevel.Debug);
+  initializeDateFormatting();
 }
 
 final isDarkNotifier = ValueNotifier<bool>(true);

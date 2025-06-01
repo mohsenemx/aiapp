@@ -1,8 +1,8 @@
-// lib/image_generation_page.dart
-import 'package:adivery_ads/adivery.dart';
-import 'package:adivery_ads/adivery_ads.dart';
+// ignore_for_file: avoid_print
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:tapsell_plus/tapsell_plus.dart';
 import 'widgets/app_drawer.dart';
 import 'services/api_service.dart';
 import 'models/ImageGen.dart';
@@ -70,16 +70,33 @@ class _ImageGenerationPageState extends State<ImageGenerationPage> {
 
   Future<void> _loadHistory() async {
     setState(() => _loading = true);
-    AdiveryPlugin.prepareInterstitialAd('3579dc3f-caeb-4529-b84c-1fba41a1502a');
-    AdiveryPlugin.show('3579dc3f-caeb-4529-b84c-1fba41a1502a');
     try {
       final images = await ApiService.instance.getUserImages();
       setState(() => _history = images);
       _fetchStars();
     } catch (e) {
-      // TODO: show error snack
+      showSnackBar(context, 'مشکلی در بازگذاری تصاویر پیش آمد', error: true);
     } finally {
       setState(() => _loading = false);
+      try {
+        final responseId = await TapsellPlus.instance.requestInterstitialAd(
+          '683872f36280794748a5d9f2',
+        );
+        TapsellPlus.instance.showInterstitialAd(
+          responseId,
+          onOpened: (map) {
+            // Ad opened - Map contains zone_id and response_id
+            print('Ad shows!');
+          },
+          onError: (map) {
+            // Ad failed to show - Map contains error_message, zone_id and response_id
+            print('Failed to show ads?');
+          },
+        );
+      } catch (e) {
+        print(e);
+        print('Failed to load ad');
+      }
     }
   }
 
@@ -125,16 +142,6 @@ class _ImageGenerationPageState extends State<ImageGenerationPage> {
       ),
       body: Column(
         children: [
-          BannerAd(
-            '3579dc3f-caeb-4529-b84c-1fba41a1502a',
-            BannerAdSize.LARGE_BANNER,
-            onAdLoaded: (ad) {
-              print('Banner ad loaded');
-            },
-            onAdClicked: (ad) {
-              print('Banner ad clicked');
-            },
-          ),
           Padding(
             padding: const EdgeInsets.all(12),
             child: Column(

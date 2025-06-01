@@ -61,3 +61,8 @@ android {
 flutter {
     source = "../.."
 }
+dependencies {
+    // Admob
+    implementation("com.google.android.gms:play-services-ads:22.6.0")
+
+}
