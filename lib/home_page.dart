@@ -107,23 +107,6 @@ class _HomePageState extends State<HomePage> {
           print('Something went wrong');
         },
       );
-      if (bannerResponseId != null) {
-        TapsellPlus.instance.showStandardBannerAd(
-          bannerResponseId!,
-          TapsellPlusHorizontalGravity.TOP,
-          TapsellPlusVerticalGravity.RIGHT,
-          margin: EdgeInsets.only(top: 100),
-          onOpened: (map) {
-            // Ad opened
-            print('Ad shown');
-          },
-          onError: (map) {
-            // Error when showing ad
-            print('Error showing ad');
-            print(map);
-          },
-        );
-      }
     });
   }
 
@@ -185,11 +168,32 @@ class _HomePageState extends State<HomePage> {
       body: Column(
         children: [
           const Spacer(),
-          const Center(
-            child: Text(
-              'سلام! روز بخیر.',
-              style: TextStyle(fontSize: 20),
-              textAlign: TextAlign.center,
+          Center(
+            child: GestureDetector(
+              onTap: () {
+                if (bannerResponseId != null) {
+                  TapsellPlus.instance.showStandardBannerAd(
+                    bannerResponseId!,
+                    TapsellPlusHorizontalGravity.CENTER,
+                    TapsellPlusVerticalGravity.CENTER,
+                    margin: EdgeInsets.only(top: 100),
+                    onOpened: (map) {
+                      // Ad opened
+                      print('Ad shown');
+                    },
+                    onError: (map) {
+                      // Error when showing ad
+                      print('Error showing ad');
+                      print(map);
+                    },
+                  );
+                }
+              },
+              child: Text(
+                'سلام! روز بخیر.',
+                style: TextStyle(fontSize: 20),
+                textAlign: TextAlign.center,
+              ),
             ),
           ),
           const Spacer(),
