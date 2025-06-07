@@ -2,6 +2,7 @@
 // ignore_for_file: avoid_print
 
 import 'package:flutter/material.dart';
+import 'package:tapsell_plus/tapsell_plus.dart';
 import 'widgets/app_drawer.dart';
 import 'widgets/message_input.dart';
 import 'services/api_service.dart';
@@ -82,6 +83,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  String? bannerResponseId;
   @override
   void initState() {
     super.initState();
@@ -92,6 +94,36 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         stars = fetched;
       });
+      TapsellPlus.instance.requestStandardBannerAd(
+        '683873296280794748a5d9f4',
+        TapsellPlusBannerType.BANNER_320x50,
+        onResponse: (map) {
+          // SAVE the responseId
+          bannerResponseId = map['response_id'];
+          print(bannerResponseId);
+        },
+        onError: (map) {
+          // Error when requesting for an ad
+          print('Something went wrong');
+        },
+      );
+      if (bannerResponseId != null) {
+        TapsellPlus.instance.showStandardBannerAd(
+          bannerResponseId!,
+          TapsellPlusHorizontalGravity.TOP,
+          TapsellPlusVerticalGravity.RIGHT,
+          margin: EdgeInsets.only(top: 100),
+          onOpened: (map) {
+            // Ad opened
+            print('Ad shown');
+          },
+          onError: (map) {
+            // Error when showing ad
+            print('Error showing ad');
+            print(map);
+          },
+        );
+      }
     });
   }
 

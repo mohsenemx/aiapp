@@ -72,6 +72,57 @@ class _MessageInputState extends State<MessageInput> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                if (_pickedImage != null)
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: SizedBox(
+                      width: 100,
+                      height: 100,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: primary, width: 3),
+                        ),
+                        child: Stack(
+                          alignment: Alignment.topRight,
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(16),
+                              child: Container(
+                                height: 120,
+                                color: Colors.black12,
+                                alignment: Alignment.center,
+                                child: Image.file(
+                                  File(_pickedImage!.path),
+                                  height: 120,
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              top: 0,
+                              right: 2,
+                              child: GestureDetector(
+                                onTap: _clearImage,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.black54,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  padding: const EdgeInsets.all(4),
+                                  child: const Icon(
+                                    Icons.close,
+                                    size: 18,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Column(
@@ -186,101 +237,37 @@ class _MessageInputState extends State<MessageInput> {
                                 ],
                               ),
                               // send button
-                              Row(
-                                children: [
-                                  if (_pickedImage != null)
-                                    SizedBox(
-                                      width: 50,
-                                      height: 50,
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(
-                                            10,
-                                          ),
-                                          border: Border.all(
-                                            color: primary,
-                                            width: 5,
-                                          ),
-                                        ),
-                                        child: Stack(
-                                          alignment: Alignment.topRight,
-                                          children: [
-                                            ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(16),
-                                              child: Container(
-                                                height: 120,
-                                                color: Colors.black12,
-                                                alignment: Alignment.center,
-                                                child: Image.file(
-                                                  File(_pickedImage!.path),
-                                                  height: 120,
-                                                  fit: BoxFit.contain,
-                                                ),
-                                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: CircleAvatar(
+                                  backgroundColor: primary,
+                                  child:
+                                      widget.enabled
+                                          ? IconButton(
+                                            style: ButtonStyle(),
+                                            icon: Icon(
+                                              Icons.arrow_upward,
+                                              color: Colors.white,
                                             ),
-                                            Positioned(
-                                              top: 0,
-                                              right: 2,
-                                              child: GestureDetector(
-                                                onTap: _clearImage,
-                                                child: Container(
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.black54,
-                                                    shape: BoxShape.circle,
-                                                  ),
-                                                  padding: const EdgeInsets.all(
-                                                    4,
-                                                  ),
-                                                  child: const Icon(
-                                                    Icons.close,
-                                                    size: 18,
-                                                    color: Colors.white,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: CircleAvatar(
-                                      backgroundColor: primary,
-                                      child:
-                                          widget.enabled
-                                              ? IconButton(
-                                                style: ButtonStyle(),
-                                                icon: Icon(
-                                                  Icons.arrow_upward,
-                                                  color: Colors.white,
-                                                ),
-                                                onPressed: () {
-                                                  setState(() {
-                                                    pointsNeeded = 0;
-                                                  });
+                                            onPressed: () {
+                                              setState(() {
+                                                pointsNeeded = 0;
+                                              });
 
-                                                  widget.onSend(
-                                                    widget.controller.text
-                                                        .trim(),
-                                                    _pickedImage,
-                                                  );
-                                                  _clearImage();
-                                                },
-                                              )
-                                              : Padding(
-                                                padding: const EdgeInsets.all(
-                                                  10.0,
-                                                ),
-                                                child:
-                                                    CircularProgressIndicator(
-                                                      color: Colors.white,
-                                                    ),
-                                              ),
-                                    ),
-                                  ),
-                                ],
+                                              widget.onSend(
+                                                widget.controller.text.trim(),
+                                                _pickedImage,
+                                              );
+                                              _clearImage();
+                                            },
+                                          )
+                                          : Padding(
+                                            padding: const EdgeInsets.all(10.0),
+                                            child: CircularProgressIndicator(
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                ),
                               ),
                             ],
                           );
