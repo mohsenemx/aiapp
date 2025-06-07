@@ -119,6 +119,40 @@ class _ImageGenerationPageState extends State<ImageGenerationPage> {
     }
   }
 
+  /// Opens the given [url] in a full‐screen modal with a close button.
+  void _openFullScreen(String url) {
+    showDialog(
+      context: context,
+      builder:
+          (_) => Dialog(
+            backgroundColor: Colors.transparent,
+            insetPadding: EdgeInsets.zero,
+            child: Stack(
+              children: [
+                // The image in a GestureDetector so tapping the edges also closes
+                GestureDetector(
+                  onTap: () => Navigator.of(context).pop(),
+                  child: InteractiveViewer(
+                    child: Center(
+                      child: Image.network(url, fit: BoxFit.contain),
+                    ),
+                  ),
+                ),
+                // Close button
+                Positioned(
+                  top: 40,
+                  right: 20,
+                  child: IconButton(
+                    icon: Icon(Icons.close, color: Colors.white, size: 30),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final mstars = NumberFormat.decimalPattern('fa').format(stars);
@@ -215,19 +249,23 @@ class _ImageGenerationPageState extends State<ImageGenerationPage> {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             if (gen.url.isNotEmpty)
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.vertical(
-                                    top: Radius.circular(4),
-                                  ),
-                                  child: Image.network(
-                                    gen.url,
-                                    fit: BoxFit.cover,
-                                    height: 180,
+                              GestureDetector(
+                                onTap: () => _openFullScreen(gen.url),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.vertical(
+                                      top: Radius.circular(4),
+                                    ),
+                                    child: Image.network(
+                                      gen.url,
+                                      fit: BoxFit.cover,
+                                      height: 180,
+                                    ),
                                   ),
                                 ),
                               ),
+
                             Padding(
                               padding: const EdgeInsets.all(8),
                               child: Column(

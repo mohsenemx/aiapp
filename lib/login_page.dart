@@ -21,7 +21,6 @@ class _LoginPageState extends State<LoginPage> {
   _Stage _stage = _Stage.enterPhone;
   bool _loading = false;
   String? _error;
-  int? _otpExpires; // seconds
   int _resendRemaining = 0;
   Timer? _resendTimer;
 
@@ -47,10 +46,9 @@ class _LoginPageState extends State<LoginPage> {
       _error = null;
     });
     try {
-      final expiresIn = await ApiService.instance.sendOtp(phone);
+      await ApiService.instance.sendOtp(phone);
       setState(() {
         _stage = _Stage.enterOtp;
-        _otpExpires = expiresIn;
       });
       _startResendTimer();
       sleep(Duration(seconds: 1));
@@ -147,10 +145,6 @@ class _LoginPageState extends State<LoginPage> {
                   labelText: 'کد دریافتی',
                   hintText: '۴ رقمی',
                   border: const OutlineInputBorder(),
-                  suffixText:
-                      _otpExpires != null
-                          ? 'منقضی در $_otpExpires ثانیه'
-                          : null,
                 ),
               ),
               const SizedBox(height: 16),

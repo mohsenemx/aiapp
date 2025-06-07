@@ -1,9 +1,11 @@
 // lib/widgets/app_drawer.dart
 
 import 'package:aiapp/ImageGen_page.dart';
+import 'package:aiapp/widgets/ui_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:arabic_numbers/arabic_numbers.dart';
+import 'package:tapsell_plus/tapsell_plus.dart';
 import '../models/chat.dart';
 import '../services/api_service.dart';
 import '../chat_page.dart';
@@ -25,19 +27,24 @@ class _AppDrawerState extends State<AppDrawer> {
   bool _loading = true;
 
   Future<void> _loadChats() async {
-    setState(() => _loading = true);
     try {
-      _chats = await ApiService.instance.getChats();
+      setState(() => _loading = true);
+      try {
+        _chats = await ApiService.instance.getChats();
+      } catch (e) {
+        showSnackBar(context, 'مشکلی در بارگزاری چت ها رخ داد', error: true);
+      } finally {
+        setState(() => _loading = false);
+      }
     } catch (e) {
-      // optionally show error
-    } finally {
-      setState(() => _loading = false);
+      print('Making the engine shut up when closing drawer too early.');
     }
   }
 
   @override
   void initState() {
     super.initState();
+    TapsellPlus.instance.hideStandardBanner();
     _loadChats();
   }
 
@@ -219,7 +226,8 @@ class _AppDrawerState extends State<AppDrawer> {
             const Divider(),
 
             Row(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisSize: MainAxisSize.max,
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 ApiService.instance.isLoggedIn
                     ? SizedBox(

@@ -27,7 +27,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final TextEditingController _homeTC = TextEditingController();
   bool _sending = false;
-
+  String? bannerResponseId;
   Future<void> _sendFromHome({required String text, XFile? file}) async {
     final text = _homeTC.text.trim();
     if (text.isEmpty) return;
@@ -83,7 +83,23 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  String? bannerResponseId;
+  void _showBannerAd(String responseId) {
+    TapsellPlus.instance.showStandardBannerAd(
+      responseId,
+      TapsellPlusHorizontalGravity.TOP,
+      TapsellPlusVerticalGravity.CENTER,
+      margin: EdgeInsets.only(top: 300),
+      onOpened: (map) {
+        // Ad opened
+        print('Ad shown with ID: ${map['response_id']}');
+      },
+      onError: (map) {
+        // Error when showing ad
+        print('Error showing ad, reason: $map');
+      },
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -94,13 +110,19 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         stars = fetched;
       });
+      TapsellPlus.instance.displayStandardBanner();
+
       TapsellPlus.instance.requestStandardBannerAd(
         '683873296280794748a5d9f4',
         TapsellPlusBannerType.BANNER_320x50,
         onResponse: (map) {
-          // SAVE the responseId
           bannerResponseId = map['response_id'];
-          print(bannerResponseId);
+          print('Sucessfully Got an Ad!');
+          if (bannerResponseId != null) {
+            Future.delayed(Duration(seconds: 2), () {
+              _showBannerAd(bannerResponseId!);
+            });
+          }
         },
         onError: (map) {
           // Error when requesting for an ad
@@ -165,38 +187,17 @@ class _HomePageState extends State<HomePage> {
           ),*/
         ],
       ),
-      body: Column(
+      body: const Column(
         children: [
-          const Spacer(),
+          Spacer(),
           Center(
-            child: GestureDetector(
-              onTap: () {
-                if (bannerResponseId != null) {
-                  TapsellPlus.instance.showStandardBannerAd(
-                    bannerResponseId!,
-                    TapsellPlusHorizontalGravity.CENTER,
-                    TapsellPlusVerticalGravity.CENTER,
-                    margin: EdgeInsets.only(top: 100),
-                    onOpened: (map) {
-                      // Ad opened
-                      print('Ad shown');
-                    },
-                    onError: (map) {
-                      // Error when showing ad
-                      print('Error showing ad');
-                      print(map);
-                    },
-                  );
-                }
-              },
-              child: Text(
-                'سلام! روز بخیر.',
-                style: TextStyle(fontSize: 20),
-                textAlign: TextAlign.center,
-              ),
+            child: Text(
+              'سلام! روز بخیر.',
+              style: TextStyle(fontSize: 20),
+              textAlign: TextAlign.center,
             ),
           ),
-          const Spacer(),
+          Spacer(),
         ],
       ),
 
